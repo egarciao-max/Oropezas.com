@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deportes - OROPEZAS.COM</title>
+<link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="noticias.html">
+</head>
+<body>
+<header>
+    
+</header>
+
+<main>
+    <h1 class="page-title">Deportes</h1>
+    <p class="page-description">Últimas noticias deportivas y eventos en San Luis Potosí.</p>
+
+    <div class="articles-grid">
+<article class="article-card">
+    <div class="article-card-image">
+        <img src="SLPOPEN2026/FOTOS/Mejiacampeon.jpg" alt="Nicolás Mejía campeón">
+    </div>
+    <span class="article-card-category">Tenis</span>
+
+<h1 class="page-title">BREAKING NEWS</h1>
+
+    <h3>Nicolás Mejía se corona nuevamente campeón en San Luis</h3>
+    <p class="article-card-excerpt">
+        Nicolás Mejía venció a Duckworth en la final del San Luis Open 2026, consolidando su dominio en el torneo.
+    </p>
+    <p class="article-card-date">5 de abril de 2026</p>
+    <a href="SLPOPEN2026/article-mejia.html" class="article-card-link">Leer más</a>
+   <article class="article-card">
+          <div class="video-container">
+    <iframe
+        width="100%" 
+        height="250"
+        src="https://www.youtube.com/embed/Zgt_gyOGRQQ"
+        frameborder="0"
+        allowfullscreen>
+    </iframe>
+</div>
+            <span class="article-card-category">Tenis</span>
+            <h3>SLP Open 2026 cierra con éxito total tras una semana histórica</h3>
+            <p class="article-card-excerpt">El San Luis Open 2026 llegó oficialmente a su fin, cerrando una edición que será recordada 
+como una de las más exitosas en la historia reciente del torneo.</p>
+            <p class="article-card-date">5 de abril de 2026</p>
+            <a href="SLPOPEN2026/article-open-cerrado.html" class="article-card-link">Leer más</a>
+        </article>
+</article>
+        <article class="article-card">
+            <div class="article-card-image">
+                <img src="SLPOPEN2026/FOTOS/MEXICANOSEMI.jpg" alt="Rodrigo Pacheco en acción">
+            </div>
+            <span class="article-card-category">Tenis</span>
+            <h3>Rodrigo Pacheco avanza a semifinales en el San Luis Open</h3>
+            <p class="article-card-excerpt">El mexicano logró una victoria sólida ante un rival internacional, asegurando su lugar entre los mejores del torneo.</p>
+            <p class="article-card-date">4 de abril de 2026</p>
+            <a href="SLPOPEN2026/article-pacheco.html" class="article-card-link">Leer más</a>
+        </article>
+
+        <article class="article-card">
+            <div class="article-card-image">
+                <video controls poster="SLPOPEN2026/FOTOS/preview.jpeg">
+                    <source src="SLPOPEN2026/VIDEOS/OPEN1.mp4" type="video/mp4">
+                </video>
+            </div>
+            <span class="article-card-category">Tenis</span>
+            <h3>San Luis Open 2026: tradición y talento sobre arcilla</h3>
+            <p class="article-card-excerpt">El torneo se consolida como plataforma clave para el desarrollo del tenis profesional en Latinoamérica.</p>
+            <p class="article-card-date">4 de abril de 2026</p>
+            <a href="SLPOPEN2026/article-san-luis-open.html" class="article-card-link">Leer más</a>
+        </article>
+
+        <article class="article-card">
+            <div class="article-card-image">
+                <img src="SLPOPEN2026/FOTOS/lleno.jpeg" alt="San Luis Open lleno">
+            </div>
+            <span class="article-card-category">Eventos</span>
+            <h3>San Luis Open se llena en tiempo récord</h3>
+            <p class="article-card-excerpt">La demanda superó todas las expectativas, agotando entradas en menos de 24 horas.</p>
+            <p class="article-card-date">4 de abril de 2026</p>
+            <a href="SLPOPEN2026/article-open-lleno.html" class="article-card-link">Leer más</a>
+        </article>
+    </div>
+
+    <div class="pagination">
+        <span class="current">1</span>
+        <a href="#">2</a>
+        <a href="#">3</a>
+        <a href="#">Siguiente →</a>
+    </div>
+</main>
+<script src="main.js"></script>
+
+<footer>
+  
+</footer>
+<!-- ========== OROPEZAS AI PRO MAX ULTRA ========= -->
+<style>
+#chat-bot-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #000;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 16px;
+  cursor: pointer;
+  z-index: 9999;
+}
+
+#chat-window {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 360px;
+  max-width: 92vw;
+  height: 520px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: system-ui;
+}
+
+.chat-header {
+  background: #000;
+  color: white;
+  padding: 14px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  background: #fafafa;
+}
+
+.msg {
+  margin: 8px 0;
+  max-width: 80%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  line-height: 1.4;
+  animation: fade 0.2s ease;
+}
+
+.user {
+  background: #000;
+  color: white;
+  margin-left: auto;
+}
+
+.bot {
+  background: #e9e9e9;
+  color: #111;
+}
+
+.chat-input {
+  border-top: 1px solid #eee;
+  display: flex;
+  align-items: flex-end;
+  padding: 8px;
+}
+
+.chat-input textarea {
+  flex: 1;
+  resize: none;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  max-height: 100px;
+  padding: 8px;
+}
+
+.chat-input button {
+  background: #000;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.typing {
+  display: flex;
+  gap: 4px;
+}
+
+.typing span {
+  width: 6px;
+  height: 6px;
+  background: #888;
+  border-radius: 50%;
+  animation: bounce 1.2s infinite;
+}
+
+.typing span:nth-child(2){animation-delay:0.2s;}
+.typing span:nth-child(3){animation-delay:0.4s;}
+
+@keyframes bounce {
+  0%,80%,100%{transform:scale(0);}
+  40%{transform:scale(1);}
+}
+
+@keyframes fade {
+  from{opacity:0; transform:translateY(8px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+.msg strong {font-weight:700;}
+.msg em {font-style:italic;}
+.msg a {color:#007aff; text-decoration:none;}
+.msg ul {padding-left:18px;}
+</style>
+
+<button id="chat-bot-btn">💬</button>
+
+<div id="chat-window">
+  <div class="chat-header">
+    Oropezas AI
+    <span id="close" style="cursor:pointer">✕</span>
+  </div>
+
+  <div class="chat-messages" id="messages">
+    <div class="msg bot">Hola 👋 soy tu asistente. Pregunta lo que quieras.</div>
+  </div>
+
+  <div class="chat-input">
+    <textarea id="input" rows="1" placeholder="Escribe..."></textarea>
+    <button id="send">➤</button>
+  </div>
+</div>
+
+<script>
+const API = "https://oropezas.enriquegarciaoropeza.workers.dev";
+
+const btn = document.getElementById("chat-bot-btn");
+const win = document.getElementById("chat-window");
+const close = document.getElementById("close");
+const input = document.getElementById("input");
+const send = document.getElementById("send");
+const messages = document.getElementById("messages");
+
+btn.onclick = () => {
+  win.style.display = win.style.display === "flex" ? "none" : "flex";
+  input.focus();
+};
+
+close.onclick = () => win.style.display = "none";
+
+// AUTO RESIZE
+input.addEventListener("input", () => {
+  input.style.height = "auto";
+  input.style.height = input.scrollHeight + "px";
+});
+
+// ENTER SEND
+input.addEventListener("keydown", e => {
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    sendMessage(input.value);
+  }
+});
+
+// MARKDOWN
+function md(text){
+  return text
+    .replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g,"<em>$1</em>")
+    .replace(/\[(.*?)\]\((.*?)\)/g,'<a href="$2" target="_blank">$1</a>')
+    .replace(/\n/g,"<br>");
+}
+
+// ADD MSG
+function add(text,type){
+  const div = document.createElement("div");
+  div.className = "msg " + type;
+  div.innerHTML = md(text);
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// LOADER
+function loader(){
+  const div = document.createElement("div");
+  div.className = "msg bot typing";
+  div.id = "typing";
+  div.innerHTML = "<span></span><span></span><span></span>";
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function removeLoader(){
+  const t = document.getElementById("typing");
+  if(t) t.remove();
+}
+
+// SEND
+async function sendMessage(text){
+  if(!text.trim()) return;
+
+  add(text,"user");
+  input.value = "";
+  input.style.height = "auto";
+
+  loader();
+
+  try{
+    const res = await fetch(API,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({message:text})
+    });
+
+    const data = await res.json();
+    removeLoader();
+
+    smartType(data.reply || "Error");
+
+  }catch{
+    removeLoader();
+    add("Error de conexión.","bot");
+  }
+}
+
+// SMART TYPE (chunk, no letra cringe)
+function smartType(text){
+  const div = document.createElement("div");
+  div.className = "msg bot";
+  messages.appendChild(div);
+
+  let i = 0;
+  function chunk(){
+    if(i < text.length){
+      div.innerHTML = md(text.slice(0, i));
+      i += 3; // velocidad pro
+      messages.scrollTop = messages.scrollHeight;
+      setTimeout(chunk, 15);
+    }
+  }
+  chunk();
+}
+
+send.onclick = () => sendMessage(input.value);
+</script>
+
+
+</body>
+</html>

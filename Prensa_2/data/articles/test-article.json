@@ -1,0 +1,14 @@
+{
+  "slug": "test-article",
+  "title": "Artículo de prueba",
+  "excerpt": "Esta es una prueba del nuevo sistema de artículos dinámicos.",
+  "category": "noticias",
+  "date": "2026-04-08",
+  "image": "/FOTOS/preview.jpeg",
+  "video": "",
+  "content": [
+    "Este es el primer párrafo del artículo de prueba.",
+    "Este es el segundo párrafo para confirmar que article.js está cargando correctamente el contenido.",
+    "Si estás leyendo esto, tu sistema ya está funcionando."
+  ]
+}

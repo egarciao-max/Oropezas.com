@@ -1,0 +1,36 @@
+{
+  "id": "pacheco-semifinales-2026",
+  "slug": "pacheco-semifinales-2026",
+  "title": "Rodrigo Pacheco avanza a semifinales en el San Luis Open 2026",
+  "excerpt": "El mexicano destacó por su solidez mental y remontadas clave.",
+  "category": "deportes",
+  "date": "2026-04-03",
+  "author": "Enrique Oropeza",
+  "readingTime": "3 min de lectura",
+  "featuredImage": "FOTOS/MEXICANOSEMI.jpg",
+  "featuredImageAlt": "Rodrigo Pacheco",
+  "tags": ["tenis", "pacheco"],
+  "credits": {
+    "name": "Enrique Oropeza",
+    "publishedText": "Publicado el 4 de abril de 2026 • Oropezas.com"
+  },
+  "content": [
+    {
+      "type": "paragraph",
+      "html": "<strong>🎾 El tenis mexicano tiene nuevo protagonista.</strong>"
+    },
+    {
+      "type": "paragraph",
+      "html": "Rodrigo Pacheco avanzó a semifinales tras una actuación destacada."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Remontada clave"
+    },
+    {
+      "type": "paragraph",
+      "html": "El mexicano logró revertir un inicio complicado para imponerse en tres sets."
+    }
+  ]
+}

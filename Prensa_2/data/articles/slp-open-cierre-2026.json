@@ -1,0 +1,36 @@
+{
+  "id": "slp-open-cierre-2026",
+  "slug": "slp-open-cierre-2026",
+  "title": "SLP Open 2026 cierra con éxito total",
+  "excerpt": "El torneo concluyó con gran asistencia y nivel competitivo.",
+  "category": "deportes",
+  "date": "2026-04-05",
+  "author": "Oropezas CEO Team",
+  "readingTime": "3 min de lectura",
+  "videoEmbed": "https://www.youtube.com/embed/Zgt_gyOGRQQ",
+  "tags": ["tenis", "slp open"],
+  "credits": {
+    "name": "Oropezas CEO Team",
+    "publishedText": "Publicado el 5 de abril de 2026 • Oropezas.com"
+  },
+  "content": [
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "🎾 El telón ha caído"
+    },
+    {
+      "type": "paragraph",
+      "html": "El torneo cerró como una de las ediciones más exitosas."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Impacto"
+    },
+    {
+      "type": "paragraph",
+      "html": "Generó impacto económico y turístico en la ciudad."
+    }
+  ]
+}
