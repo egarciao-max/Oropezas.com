@@ -1,0 +1,41 @@
+{
+  "name": "oropezas",
+  "main": "src/worker.js",
+  "workers_dev": true,
+  "preview_urls": false,
+  "compatibility_date": "2026-04-07",
+  "triggers": {
+    "crons": [
+      "0 */23 * * *"
+    ]
+  },
+  "observability": {
+    "enabled": false,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": true,
+      "persist": true,
+      "head_sampling_rate": 1
+    }
+  },
+  "kv_namespaces": [
+    {
+      "id": "5ee21fa253174c329a4c76e3e2e50ebd",
+      "binding": "PUSH_SUBSCRIPTIONS"
+    },
+    {
+      "id": "c1c418f6f2134cec9e89727bddc7fef5",
+      "binding": "SITIO_CONTENIDO"
+    },
+    {
+      "id": "0088df5b6f2a4a7d84d4729c4a1317d5",
+      "binding": "SUSCRIPCIONES"
+    }
+  ]
+}
