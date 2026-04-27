@@ -6,7 +6,7 @@ const OROPEZAS_AUTH = (function () {
   // ─── CONFIGURACIÓN ─────────────────────────────────────────────────────────
   // Reemplaza este valor con tu Client ID real desde:
   // https://console.cloud.google.com/apis/credentials
-  const GOOGLE_CLIENT_ID = 'TU_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+  const GOOGLE_CLIENT_ID = '233406003665-udr6c9vv4jej9ur8bsa22tdr9edouvfl.apps.googleusercontent.com';
 
   // Endpoints del worker
   const WORKER_URL = 'https://oropezas.enriquegarciaoropeza.workers.dev';
