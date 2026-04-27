@@ -91,6 +91,17 @@ function getMediaUrl(key) {
   return `${CONFIG.WORKER_URL}/api/media/${key}`;
 }
 
+function validarApiKeyAgente(request, env, corsHeaders) {
+  const apiKey = request.headers.get('x-api-key');
+  if (!env.API_KEY || apiKey !== env.API_KEY) {
+    return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+  return null;
+}
+
 function extraerKeyMediaDesdeUrl(url) {
   if (!url || typeof url !== 'string') return null;
   if (url.startsWith(`${CONFIG.WORKER_URL}/api/media/`)) {
@@ -226,6 +237,11 @@ export default {
     // ============================================================
     // AI AGENTS - NUEVOS ENDPOINTS
     // ============================================================
+
+    if (url.pathname.startsWith('/api/agent/')) {
+      const authError = validarApiKeyAgente(request, env, corsHeaders);
+      if (authError) return authError;
+    }
 
     if (url.pathname === '/api/agent/write' && request.method === 'POST') {
       return handleAgentWrite(request, env, corsHeaders);
@@ -907,7 +923,7 @@ function getCorsHeaders(origin) {
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, x-api-key',
     'Access-Control-Max-Age': '86400'
   };
 }
