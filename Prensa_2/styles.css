@@ -811,3 +811,346 @@ footer {
         line-height: 1.85;
     }
 }
+
+/* ============================================================
+   GOOGLE AUTH — Navbar controls
+   ============================================================ */
+
+.auth-nav-controls {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.auth-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border: 1.5px solid #000;
+  border-radius: 99px;
+  background: transparent;
+  color: #000;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+}
+.auth-login-btn:hover {
+  background: #000;
+  color: #fff;
+}
+.auth-login-btn i { font-size: 1rem; }
+
+.auth-user-avatar {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  padding: 0.3rem 0.7rem;
+  border-radius: 99px;
+  transition: background 0.15s;
+}
+.auth-user-avatar:hover { background: #f0f0f0; }
+
+.auth-avatar-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e0e0e0;
+}
+.auth-user-name-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #000;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.auth-chevron {
+  font-size: 0.7rem;
+  color: #666;
+  transition: transform 0.2s;
+}
+
+.auth-user-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 180px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 2000;
+  overflow: hidden;
+  padding: 0.4rem 0;
+}
+.auth-user-menu.open {
+  display: block;
+  animation: authMenuFadeIn 0.15s ease;
+}
+@keyframes authMenuFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.auth-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.65rem 1.1rem;
+  font-size: 0.88rem;
+  color: #222;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.12s;
+  text-align: left;
+}
+.auth-menu-item:hover { background: #f5f5f5; }
+.auth-menu-logout { color: #c00; }
+.auth-menu-divider {
+  border: none;
+  border-top: 1px solid #e8e8e8;
+  margin: 0.3rem 0;
+}
+
+/* ============================================================
+   GOOGLE AUTH — Modal de login
+   ============================================================ */
+
+.auth-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+.auth-modal.open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.auth-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px);
+}
+.auth-modal-card {
+  position: relative;
+  background: #fff;
+  border-radius: 20px;
+  padding: 2.5rem 2rem 2rem;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: authModalIn 0.22s ease;
+}
+@keyframes authModalIn {
+  from { opacity: 0; transform: scale(0.94) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.auth-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #888;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.auth-modal-close:hover { background: #f0f0f0; color: #000; }
+.auth-modal-logo img { height: 48px; margin-bottom: 1rem; }
+.auth-modal-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  color: #000;
+}
+.auth-modal-subtitle {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+.auth-gsi-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+}
+.auth-modal-terms {
+  font-size: 0.75rem;
+  color: #999;
+  line-height: 1.5;
+}
+.auth-modal-terms a { color: #555; text-decoration: underline; }
+
+/* ============================================================
+   ACCOUNT PAGE
+   ============================================================ */
+
+.account-page {
+  min-height: 80vh;
+  background: #f9f9f9;
+  padding: 2rem 0 4rem;
+}
+.account-section {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+.account-centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh;
+}
+.account-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.account-profile-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  padding: 1.75rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.account-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #e0e0e0;
+  flex-shrink: 0;
+}
+.account-profile-info { flex: 1; min-width: 0; }
+.account-profile-info h1 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0 0 0.25rem;
+  color: #000;
+}
+.account-email { font-size: 0.9rem; color: #555; margin: 0; }
+.account-since { font-size: 0.8rem; color: #999; margin: 0.25rem 0 0; }
+.account-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  border: 1.5px solid #c00;
+  border-radius: 99px;
+  background: transparent;
+  color: #c00;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  margin-left: auto;
+}
+.account-logout-btn:hover { background: #c00; color: #fff; }
+
+.account-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.account-stat-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  text-align: center;
+}
+.account-stat-number {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #000;
+  line-height: 1;
+}
+.account-stat-label {
+  font-size: 0.78rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.account-actions-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  padding: 1.75rem 2rem;
+}
+.account-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 1.25rem;
+}
+.account-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+.account-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  background: #fafafa;
+  color: #222;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: center;
+}
+.account-action-btn i { font-size: 1.4rem; color: #444; }
+.account-action-btn:hover { background: #f0f0f0; border-color: #ccc; }
+
+.account-unauthenticated-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  max-width: 420px;
+  text-align: center;
+}
+.account-big-icon { font-size: 4rem; color: #ccc; display: block; margin-bottom: 1rem; }
+.account-unauthenticated-card h1 { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.75rem; color: #000; }
+.account-unauthenticated-card p { font-size: 0.9rem; color: #666; line-height: 1.6; margin-bottom: 1.5rem; }
+.account-gsi-wrap { display: flex; justify-content: center; }
+
+@media (max-width: 640px) {
+  .auth-login-label { display: none; }
+  .auth-user-name-label { display: none; }
+  .account-stats-row { grid-template-columns: 1fr 1fr; }
+  .account-actions-grid { grid-template-columns: repeat(2, 1fr); }
+  .account-stats-row .account-stat-card:last-child { grid-column: span 2; }
+  .account-profile-card { flex-direction: column; align-items: flex-start; }
+  .account-logout-btn { margin-left: 0; }
+}
