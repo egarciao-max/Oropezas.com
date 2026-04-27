@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi cuenta - OROPEZAS.COM</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body data-page="account">
+
+<header></header>
+
+<main class="account-page">
+  <!-- Estado: no autenticado -->
+  <section id="account-unauthenticated" class="account-section account-centered" style="display:none;">
+    <div class="account-unauthenticated-card">
+      <i class="bi bi-person-circle account-big-icon"></i>
+      <h1>Inicia sesión en Oropezas.com</h1>
+      <p>Accede a tu cuenta para guardar artículos, personalizar tu experiencia y mantenerte al día con las noticias de San Luis Potosí.</p>
+      <div id="google-signin-btn" class="account-gsi-wrap"></div>
+    </div>
+  </section>
+
+  <!-- Estado: autenticado -->
+  <section id="account-authenticated" class="account-section" style="display:none;">
+    <div class="account-container">
+
+      <!-- Perfil -->
+      <div class="account-profile-card">
+        <img id="account-picture" src="" alt="Foto de perfil" class="account-avatar">
+        <div class="account-profile-info">
+          <h1 id="account-name">—</h1>
+          <p id="account-email" class="account-email">—</p>
+          <p id="account-since" class="account-since"></p>
+        </div>
+        <button class="account-logout-btn" onclick="OROPEZAS_AUTH.logout()">
+          <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+        </button>
+      </div>
+
+      <!-- Estadísticas rápidas -->
+      <div class="account-stats-row">
+        <div class="account-stat-card">
+          <span id="stat-articles" class="account-stat-number">—</span>
+          <span class="account-stat-label">Artículos publicados</span>
+        </div>
+        <div class="account-stat-card">
+          <span id="stat-subscribers" class="account-stat-number">—</span>
+          <span class="account-stat-label">Suscriptores</span>
+        </div>
+        <div class="account-stat-card">
+          <span id="stat-last-article" class="account-stat-number" style="font-size:0.9rem;">—</span>
+          <span class="account-stat-label">Último artículo</span>
+        </div>
+      </div>
+
+      <!-- Acciones rápidas -->
+      <div class="account-actions-card">
+        <h2 class="account-section-title">Acciones rápidas</h2>
+        <div class="account-actions-grid">
+          <a href="index.html" class="account-action-btn">
+            <i class="bi bi-house-door"></i>
+            <span>Inicio</span>
+          </a>
+          <a href="noticias.html" class="account-action-btn">
+            <i class="bi bi-newspaper"></i>
+            <span>Noticias</span>
+          </a>
+          <a href="deportes.html" class="account-action-btn">
+            <i class="bi bi-trophy"></i>
+            <span>Deportes</span>
+          </a>
+          <a href="contacto.html" class="account-action-btn">
+            <i class="bi bi-envelope"></i>
+            <span>Contacto</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<footer></footer>
+
+<script src="main.js"></script>
+<script src="auth.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    function renderAccount() {
+      const user = OROPEZAS_AUTH.getUser();
+      const authSection = document.getElementById('account-authenticated');
+      const unauthSection = document.getElementById('account-unauthenticated');
+
+      if (user) {
+        authSection.style.display = 'block';
+        unauthSection.style.display = 'none';
+
+        document.getElementById('account-picture').src = user.picture || '';
+        document.getElementById('account-name').textContent = user.name || '—';
+        document.getElementById('account-email').textContent = user.email || '—';
+
+        const since = user.loginAt
+          ? new Date(user.loginAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })
+          : '';
+        document.getElementById('account-since').textContent = since ? `Sesión iniciada el ${since}` : '';
+
+        // Cargar estadísticas del worker
+        fetch('https://oropezas.enriquegarciaoropeza.workers.dev/api/agent/dashboard')
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              document.getElementById('stat-articles').textContent = data.agents?.publisher?.published ?? '—';
+              document.getElementById('stat-subscribers').textContent = data.audience?.subscribers ?? '0';
+              const last = data.lastArticle?.title ?? '—';
+              document.getElementById('stat-last-article').textContent = last.length > 30 ? last.slice(0, 30) + '…' : last;
+            }
+          })
+          .catch(() => {});
+      } else {
+        authSection.style.display = 'none';
+        unauthSection.style.display = 'block';
+      }
+    }
+
+    renderAccount();
+    document.addEventListener('oropezas:login', renderAccount);
+    document.addEventListener('oropezas:logout', renderAccount);
+  });
+</script>
+</body>
+</html>
