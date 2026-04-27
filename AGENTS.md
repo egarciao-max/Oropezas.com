@@ -85,10 +85,13 @@ Endpoints principales:
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | `POST` | `/api/agent/write` | Genera borrador de artículo con Gemini |
-| `POST` | `/api/agent/publish` | Publica borrador como artículo (guarda en KV) |
+| `POST` | `/api/agent/publish` | Publica borrador como artículo (guarda en KV como JSON) |
+| `POST` | `/api/agent/auto-publish` | Genera y publica un artículo automáticamente en un solo paso |
 | `POST` | `/api/agent/blast` | Envía artículo a suscriptores por email o push |
 | `GET`  | `/api/agent/dashboard` | Estadísticas de borradores, publicados y audiencia |
 | `GET`  | `/api/articles` | Lista artículos publicados (con filtros `?category=` y `?featured=true`) |
+| `GET`  | `/api/article/:slug` | Devuelve un artículo publicado por su slug (JSON) |
+| `POST` | `/api/chat/webhook` | Webhook de Google Chat API para comandos de voz/remotos |
 | `POST` | `/api/push/subscribe` | Guarda suscripción push en KV |
 | `POST` | `/api/push/send` | Envía notificación push a todas las suscripciones |
 | `POST` | `/api/create-article` | Endpoint protegido con `x-api-key` para crear artículos |
@@ -112,6 +115,7 @@ Secrets esperados en el entorno del Worker (no en `wrangler.jsonc`, se configura
 - `GEMINI_API_KEY`
 - `RESEND_API_KEY`
 - `ARTICLE_SECRET`
+- `GOOGLE_CHAT_SECRET` (para autenticar webhooks de Google Chat)
 
 ---
 
@@ -194,5 +198,6 @@ Para verificar cambios se recomienda:
 - **Idioma**: Todo el contenido, comentarios y respuestas de la API están en español. Mantén el español para cualquier nuevo código, comentarios o mensajes de error.
 - **No modularizar sin necesidad**: El Worker está intencionalmente en un solo archivo. Si se decide dividirlo, considérese que Wrangler no tiene bundler configurado; habría que agregar uno (ej. esbuild) o importar módulos nativamente.
 - **Duplicación en frontend**: El widget del chatbot está copiado en múltiples archivos HTML. Si se modifica, hay que actualizar todas las páginas o extraerlo a un componente reutilizable.
-- **Sistema de artículos híbrido**: Existen artículos estáticos (HTML) y dinámicos (JSON). El Worker solo genera y gestiona los dinámicos. Los estáticos requieren edición manual de archivos.
+- **Sistema de artículos migrado a JSON**: El Worker ahora publica artículos como JSON puro (no como páginas HTML completas). Los artículos nuevos se renderizan dinámicamente en `article.html?slug=`. Los artículos estáticos antiguos (HTML) siguen funcionando por compatibilidad.
+- **Google Chat API**: El Worker expone `/api/chat/webhook` para recibir comandos de Google Chat (`/publicar`, `/borrador`, `/estado`, `/blast`, `/ayuda`). Requiere configurar la URL del webhook en el panel de Google Chat.
 - **Imágenes de artículos**: El Worker sugiere rutas de imagen como `${folder}/FOTOS/${slug}.jpg`, pero no gestiona el almacenamiento de imágenes. Las imágenes deben subirse manualmente al frontend.

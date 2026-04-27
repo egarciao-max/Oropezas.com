@@ -36,6 +36,16 @@
     {
       "id": "0088df5b6f2a4a7d84d4729c4a1317d5",
       "binding": "SUSCRIPCIONES"
+    },
+    {
+      "id": "f0ab30b6391b4cabacb0a87eadf634cd",
+      "binding": "OROPEZAS_KV"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "bucket_name": "oropezas-media",
+      "binding": "OROPEZAS_MEDIA"
     }
   ]
 }
