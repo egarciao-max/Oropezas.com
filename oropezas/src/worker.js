@@ -1,6 +1,7 @@
-// Deployed via GitHub Actions — 2026-04-27 v2 v2
-// src/worker.js - OROPEZAS.COM WORKER UNIFICADO
+// Deployed via GitHub Actions — 2026-05-02
+// src/worker.js - OROPEZAS.COM + KELOWNA.OROPEZAS.COM WORKER UNIFICADO
 // Chat + Suscripciones + Contacto + Rastreador + Push + AI AGENTS
+// AI: Cloudflare Workers AI (Llama 3.1 + Stable Diffusion)
 
 
 
@@ -61,6 +62,35 @@ async function saveIndex(index, env) {
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// ─── Cloudflare AI Helper ────────────────────────────────────
+async function runAI(prompt, env, opts = {}) {
+  const model = opts.model || '@cf/meta/llama-3.1-8b-instruct';
+  const maxTokens = opts.maxTokens || 4096;
+  const messages = opts.system
+    ? [{ role: 'system', content: opts.system }, { role: 'user', content: prompt }]
+    : [{ role: 'user', content: prompt }];
+  try {
+    const response = await env.AI.run(model, { messages, max_tokens: maxTokens });
+    return response.response || '';
+  } catch (e) {
+    console.error('Cloudflare AI error:', e.message);
+    throw e;
+  }
+}
+
+async function generateImageWithAI(prompt, env) {
+  try {
+    const response = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+      prompt: prompt,
+    });
+    // response is Uint8Array
+    return { bytes: response, mimeType: 'image/png' };
+  } catch (e) {
+    console.error('Cloudflare AI image error:', e.message);
+    throw e;
+  }
 }
 
 // ─── Verificar token Google (básico — solo decodifica sin verificar firma) ──
@@ -302,8 +332,10 @@ const CONFIG = {
   WORKER_URL: 'https://oropezas.enriquegarciaoropeza.workers.dev'
 };
 
-function extraerTextoGemini(geminiData) {
-  return geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+function extraerTextoAI(aiResponse) {
+  // Extract text from AI response (supports both Cloudflare AI and legacy Gemini format)
+  if (typeof aiResponse === 'string') return aiResponse;
+  return aiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || aiResponse || '';
 }
 
 function parsearArticuloGemini(texto) {
@@ -445,42 +477,18 @@ async function generarImagenConNanoBanana(article, env, { slug, category }) {
     throw new Error('Binding OROPEZAS_MEDIA no configurado');
   }
 
-  const model = env.GEMINI_IMAGE_MODEL || 'gemini-3.1-flash-image-preview';
-  const prompt = `Genera una imagen periodística editorial fotorrealista, horizontal 16:9, alta calidad, sin texto, sin marcas de agua, para una nota de Oropezas.com.
-Tema: ${article.title}
-Categoría: ${category}
-Resumen: ${article.excerpt}
-Contexto: ${article.subtitle || 'Noticias de San Luis Potosí'}
-Estilo: fotografía documental, iluminación natural, composición limpia, apta para portada de periódico digital local.`;
+  const prompt = `Editorial photojournalism, horizontal 16:9, high quality, no text, no watermarks, for a local newspaper.
+Topic: ${article.title}
+Category: ${category}
+Summary: ${article.excerpt}
+Context: ${article.subtitle || 'Local news'}
+Style: documentary photography, natural lighting, clean composition, suitable for digital newspaper cover.`;
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseModalities: ['TEXT', 'IMAGE']
-        }
-      })
-    }
-  );
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data?.error?.message || 'Error generando imagen con Gemini');
-  }
-
-  const imagePart = data?.candidates?.[0]?.content?.parts?.find((part) => part.inlineData?.data);
-  if (!imagePart?.inlineData?.data) {
-    throw new Error('Nano Banana 2 no devolvió imagen');
-  }
-
-  const mimeType = imagePart.inlineData.mimeType || 'image/png';
+  const imageResult = await generateImageWithAI(prompt, env);
+  const mimeType = imageResult.mimeType || 'image/png';
   const extension = getMimeExtension(mimeType);
   const key = `articles/${category}/${slug}.${extension}`;
-  const bytes = base64ToUint8Array(imagePart.inlineData.data);
+  const bytes = imageResult.bytes;
 
   await env.OROPEZAS_MEDIA.put(key, bytes, {
     httpMetadata: {
@@ -817,21 +825,8 @@ REGLAS ESTRICTAS:
 RESPONDE ÚNICAMENTE con este JSON válido (sin texto extra, sin markdown):
 {"title":"...","subtitle":"...","excerpt":"...","html":"...","tags":["tag1","tag2"],"content":[{"type":"paragraph","html":"<p>...</p>","text":"..."}]}`;
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 4096 }
-        })
-      }
-    );
-
-    const geminiData = await geminiRes.json();
-    const text = extraerTextoGemini(geminiData);
-    const article = construirArticuloNormalizado(parsearArticuloGemini(text), { topic, category, textoGemini: text });
+    const aiText = await runAI(prompt, env, { maxTokens: 4096 });
+    const article = construirArticuloNormalizado(parsearArticuloGemini(aiText), { topic, category, textoGemini: aiText });
 
     const draftId = `draft-${Date.now()}`;
     await env.OROPEZAS_KV.put(draftId, JSON.stringify({
@@ -863,7 +858,7 @@ RESPONDE ÚNICAMENTE con este JSON válido (sin texto extra, sin markdown):
 async function handleAgentPublish(request, env, corsHeaders) {
   try {
     const body = await request.json();
-    const { draftId, approved = false, autoPublish = false, customEdits = {}, premium = false, premiumPrice = 2900 } = body;
+    const { draftId, approved = false, autoPublish = false, customEdits = {}, premium = false, premiumPrice = 2900, site = 'oropezas' } = body;
 
     if (!draftId) {
       return new Response(JSON.stringify({ success: false, error: 'draftId requerido' }), {
@@ -943,7 +938,7 @@ async function handleAgentPublish(request, env, corsHeaders) {
 </html>`;
 
     await env.OROPEZAS_KV.put(`article:${id}`, JSON.stringify({
-      ...article, id, url, slug, date, folder,
+      ...article, id, url, slug, date, folder, site,
       featuredImage,
       image: featuredImage,
       imageKey: imageAsset.key,
@@ -965,7 +960,7 @@ async function handleAgentPublish(request, env, corsHeaders) {
       category: article.category, subcategory: article.category,
       date, image: featuredImage,
       url, slug, featured: false, tags: article.tags || [article.category],
-      author: 'Oropezas AI', status: 'published',
+      author: 'Oropezas AI', status: 'published', site,
       premium: premium || false,
       premiumPrice: premium ? premiumPrice : null,
     });
@@ -1155,6 +1150,13 @@ async function handleGetArticles(request, env, corsHeaders) {
     const slug = url.searchParams.get('slug');
     const category = url.searchParams.get('category');
     const featured = url.searchParams.get('featured');
+    const site = url.searchParams.get('site');
+
+    // Filter by site - show only articles matching the requested site
+    // Articles without a site field default to 'oropezas' (backwards compat)
+    if (site) {
+      articles = articles.filter(a => (a.site || 'oropezas') === site);
+    }
 
     if (slug) {
       articles = articles.filter((a) => {
@@ -1357,39 +1359,28 @@ async function handleChatMessage(message, env, site) {
       : "El bot está indexando el contenido. Espera unos minutos.";
   }
 
-  const GEMINI_API_KEY = env.GEMINI_API_KEY;
-  if (!GEMINI_API_KEY) {
-    return "Error: API key de Gemini no encontrada.";
-  }
-
-  const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
-
   const siteName = isKelowna ? 'Kelowna.Oropezas.com' : 'Oropezas.com';
-  const siteDesc = isKelowna
-    ? 'un sitio de noticias locales de Kelowna, BC, Canadá'
-    : 'un periódico digital de San Luis Potosí';
-  const systemInstruction = `Eres asistente exclusivo de ${siteName}.
-Responde ÚNICAMENTE con contenido del sitio.
-Si no puedes responder, di exactamente: "Te puedo ayudar en algo relacionado sobre ${siteName}"
-Considera clima, saludos, y si dicen "limon" eres Gemini normal.
-Contenido: ${contexto}`;
+  const systemPrompt = `You are the exclusive assistant of ${siteName}.
+Answer ONLY with content from the site.
+If you cannot answer, say exactly: "I can help you with something related to ${siteName}"
+Consider weather, greetings, and if they say "lemon" you are a normal AI assistant.
+Content: ${contexto}`;
+
+  const userPrompt = isKelowna ? message : `Pregunta: ${message}`;
 
   try {
-    const response = await fetch(urlGemini, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: systemInstruction + "\n\nPregunta: " + message }] }],
-        generationConfig: { temperature: 0.5, maxOutputTokens: 1200 }
-      })
+    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      max_tokens: 1200,
     });
-    const data = await response.json();
-    if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      return data.candidates[0].content.parts[0].text;
-    }
-    return `Te puedo ayudar en algo relacionado sobre ${isKelowna ? 'Kelowna.Oropezas.com' : 'el periódico Oropezas.com'}`;
+    return response.response || `I can help you with something related to ${siteName}`;
   } catch (error) {
-    return 'Lo siento, hubo un error. Intenta de nuevo.';
+    return isKelowna
+      ? 'Sorry, there was an error. Please try again.'
+      : 'Lo siento, hubo un error. Intenta de nuevo.';
   }
 }
 
@@ -1569,7 +1560,7 @@ async function sendPush(subscription, payload, env) {
 async function handleAgentAutoPublish(request, env, corsHeaders) {
   try {
     const body = await request.json();
-    const { topic, category = 'noticias', tone = 'periodístico', length = 'medio', autoBlast = false, premium = false, premiumPrice = 2900 } = body;
+    const { topic, category = 'noticias', tone = 'periodístico', length = 'medio', autoBlast = false, premium = false, premiumPrice = 2900, site = 'oropezas' } = body;
 
     if (!topic || topic.length < 5) {
       return new Response(JSON.stringify({ success: false, error: 'Tema requerido (mín 5 chars)' }), {
@@ -1594,21 +1585,8 @@ REGLAS ESTRICTAS:
 RESPONDE ÚNICAMENTE con este JSON válido (sin texto extra, sin markdown):
 {"title":"...","subtitle":"...","excerpt":"...","html":"...","tags":["tag1","tag2"],"content":[{"type":"paragraph","html":"<p>...</p>","text":"..."}]}`;
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 4096 }
-        })
-      }
-    );
-
-    const geminiData = await geminiRes.json();
-    const text = extraerTextoGemini(geminiData);
-    const article = construirArticuloNormalizado(parsearArticuloGemini(text), { topic, category, textoGemini: text });
+    const aiText = await runAI(prompt, env, { maxTokens: 4096 });
+    const article = construirArticuloNormalizado(parsearArticuloGemini(aiText), { topic, category, textoGemini: aiText });
 
     const slug = slugify(article.title);
 
@@ -1620,7 +1598,7 @@ RESPONDE ÚNICAMENTE con este JSON válido (sin texto extra, sin markdown):
     const featuredImage = imageAsset.url;
 
     await env.OROPEZAS_KV.put(`article:${id}`, JSON.stringify({
-      ...article, id, url, slug, date, folder,
+      ...article, id, url, slug, date, folder, site,
       featuredImage,
       image: featuredImage,
       imageKey: imageAsset.key,
@@ -1640,7 +1618,7 @@ RESPONDE ÚNICAMENTE con este JSON válido (sin texto extra, sin markdown):
       category: article.category, subcategory: article.category,
       date, image: featuredImage,
       url, slug, featured: false, tags: article.tags || [article.category],
-      author: 'Oropezas AI', status: 'published',
+      author: 'Oropezas AI', status: 'published', site,
       premium: premium || false,
       premiumPrice: premium ? premiumPrice : null,
     });

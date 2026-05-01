@@ -11,15 +11,16 @@
 
 <header>
   <div class="header-container" style="text-align:center;">
-    <a href="/kelowna/" class="logo" style="font-size:1.5rem; letter-spacing:0.1em;">
-      KELOWNA<span style="color:#c8102e;">.OROPEZAS</span>
+    <a href="/kelowna/" class="logo" style="display:flex;align-items:center;justify-content:center;gap:0.75rem;text-decoration:none;margin-bottom:0.5rem;">
+      <img src="../LOGO.jpeg" alt="Oropezas" style="height:36px;width:auto;border-radius:4px;">
+      <span style="font-size:1.3rem; letter-spacing:0.08em; color:var(--black);">KELOWNA<span style="color:#c8102e;">.OROPEZAS</span></span>
     </a>
     <p class="tagline">Local news from Kelowna, BC, Canada</p>
     <nav style="border-top:1px solid var(--gray-border); padding-top:1rem;">
       <a href="/kelowna/">Home</a>
       <a href="/kelowna/noticias.html">News</a>
       <a href="/kelowna/contacto.html">Contact</a>
-      <a href="/">Main Site</a>
+      <a href="https://oropezas.com" style="background:var(--black);color:var(--white);padding:0.35rem 0.8rem;border-radius:4px;font-size:0.8rem;">🇲🇽 Oropezas (Mexico)</a>
     </nav>
   </div>
 </header>
@@ -104,7 +105,7 @@ send.onclick = () => sendMessage(input.value);
 
 (async function loadNews() {
   try {
-    const res = await fetch(API + '/api/articles');
+    const res = await fetch(API + '/api/articles?site=kelowna');
     const data = await res.json();
     const articles = data.articles || [];
     const grid = document.getElementById('articles-grid');
