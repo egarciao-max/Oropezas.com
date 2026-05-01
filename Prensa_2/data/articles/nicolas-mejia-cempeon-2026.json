@@ -1,0 +1,36 @@
+{
+  "id": "nicolas-mejia-campeon-2026",
+  "slug": "nicolas-mejia-campeon-2026",
+  "title": "Nicolás Mejía se corona nuevamente campeón en San Luis",
+  "excerpt": "El colombiano venció a James Duckworth en la final del Challenger.",
+  "category": "deportes",
+  "date": "2026-04-06",
+  "author": "Marijo Macias",
+  "readingTime": "4 min de lectura",
+  "featuredImage": "FOTOS/Mejiacampeon.jpg",
+  "featuredImageAlt": "Nicolás Mejía campeón",
+  "tags": ["tenis", "mejia", "challenger"],
+  "credits": {
+    "name": "Marijo Macias",
+    "publishedText": "Publicado el 6 de abril de 2026 • Oropezas.com"
+  },
+  "content": [
+    {
+      "type": "paragraph",
+      "html": "<strong>🎾 El colombiano vuelve a hacer historia en San Luis.</strong>"
+    },
+    {
+      "type": "paragraph",
+      "html": "Nicolás Mejía derrotó a James Duckworth con marcador de 7-6(6), 6-2 para quedarse con el título."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Una final de alto nivel"
+    },
+    {
+      "type": "paragraph",
+      "html": "El partido enfrentó a los campeones de las dos ediciones anteriores en un duelo intenso."
+    }
+  ]
+}p

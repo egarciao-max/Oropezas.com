@@ -1,0 +1,45 @@
+{
+  "id": "slp-open-lleno-2026",
+  "slug": "slp-open-lleno-2026",
+  "title": "El SLP Open 2026 se llena en tiempo récord",
+  "excerpt": "El torneo agotó entradas en menos de 24 horas tras el avance de Rodrigo Pacheco.",
+  "category": "deportes",
+  "date": "2026-04-04",
+  "author": "Enrique Oropeza",
+  "readingTime": "2 min de lectura",
+  "featuredImage": "FOTOS/lleno.jpeg",
+  "featuredImageAlt": "San Luis Open lleno",
+  "tags": ["tenis", "slp open", "pacheco"],
+  "credits": {
+    "name": "Enrique Oropeza",
+    "publishedText": "Publicado el 4 de abril de 2026 • Oropezas.com"
+  },
+  "content": [
+    {
+      "type": "paragraph",
+      "html": "<strong>🎾 El tenis en San Luis vive un momento histórico.</strong>"
+    },
+    {
+      "type": "paragraph",
+      "html": "El San Luis Open 2026 logró agotar sus entradas en tiempo récord tras el avance del mexicano Rodrigo Pacheco a semifinales."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Demanda histórica"
+    },
+    {
+      "type": "paragraph",
+      "html": "En menos de 24 horas, los boletos fueron completamente adquiridos, reflejando el enorme interés del público."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Impacto del torneo"
+    },
+    {
+      "type": "paragraph",
+      "html": "La calidad del evento y la presencia de jugadores destacados han elevado el perfil del torneo."
+    }
+  ]
+}

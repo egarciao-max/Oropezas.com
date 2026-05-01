@@ -1,0 +1,53 @@
+{
+  "name": "oropezas",
+  "main": "src/worker.js",
+  "workers_dev": true,
+  "preview_urls": false,
+  "compatibility_date": "2026-04-07",
+  "triggers": {
+    "crons": [
+      "0 */23 * * *"
+    ]
+  },
+  "observability": {
+    "enabled": false,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true
+    }
+  },
+  "kv_namespaces": [
+    {
+      "id": "5ee21fa253174c329a4c76e3e2e50ebd",
+      "binding": "PUSH_SUBSCRIPTIONS"
+    },
+    {
+      "id": "c1c418f6f2134cec9e89727bddc7fef5",
+      "binding": "SITIO_CONTENIDO"
+    },
+    {
+      "id": "0088df5b6f2a4a7d84d4729c4a1317d5",
+      "binding": "SUSCRIPCIONES"
+    },
+    {
+      "id": "f0ab30b6391b4cabacb0a87eadf634cd",
+      "binding": "OROPEZAS_KV"
+    },
+    {
+      "id": "397ecdc4e9594651afc51086fff53650",
+      "binding": "OROPEZAS_FOROS"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "bucket_name": "oropezas-media",
+      "binding": "OROPEZAS_MEDIA"
+    }
+  ],
+  "ai": {
+    "binding": "AI"
+  }
+}

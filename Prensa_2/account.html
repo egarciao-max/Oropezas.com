@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuenta - OROPEZAS.COM</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    /* ── PUBLIC PROFILE (read-only, shown when ?uid= param present) ── */
+    .pub-profile-wrap { max-width: 680px; margin: 3rem auto; padding: 0 1rem; }
+    .pub-profile-card { background:#fff; border:1px solid #e8e8e8; border-radius:4px; overflow:hidden; }
+    .pub-banner { height: 120px; background: linear-gradient(135deg,#000 0%,#333 100%); }
+    .pub-profile-body { display:flex; align-items:flex-end; gap:1.2rem; padding:0 1.5rem 1.5rem; margin-top:-48px; flex-wrap:wrap; }
+    .pub-avatar { width:96px; height:96px; border-radius:50%; border:4px solid #fff; object-fit:cover; background:#eee; flex-shrink:0; }
+    .pub-info { flex:1; min-width:200px; padding-top:52px; }
+    .pub-name { font-size:1.4rem; font-weight:800; margin:0 0 2px; letter-spacing:-0.02em; display:flex; align-items:center; gap:.5rem; }
+    .pub-badge { font-size:.7rem; background:#000; color:#fff; padding:2px 8px; border-radius:20px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; display:inline-flex; align-items:center; gap:4px; }
+    .pub-badge.verified { background:#000; }
+    .pub-badge.verified i { color:#fff; font-size:.8rem; }
+    .pub-badge.verified.ceo { background:#000; }
+    .pub-badge.verified.ai { background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+    .pub-badge.verified.publisher { background:#1d4ed8; }
+    .pub-badge.ai { background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+    .pub-badge.ceo { background:#000; }
+    .pub-badge.publisher { background:#1d4ed8; }
+    .pub-title { font-size:.85rem; color:#666; margin:2px 0 6px; }
+    .pub-bio { font-size:.9rem; color:#444; line-height:1.6; margin:0; }
+    .pub-articles-section { padding:1.5rem; border-top:1px solid #eee; margin-top:1rem; }
+    .pub-articles-section h3 { font-size:.8rem; text-transform:uppercase; letter-spacing:.1em; color:#888; margin:0 0 1rem; }
+
+    /* ── DASHBOARD PANEL ── */
+    .dashboard-card { background:#fff; border:1px solid #e8e8e8; border-radius:4px; padding:1.5rem; margin-bottom:1.5rem; }
+    .dashboard-card h2 { font-size:.85rem; text-transform:uppercase; letter-spacing:.1em; color:#666; margin:0 0 1.2rem; display:flex; align-items:center; gap:.5rem; }
+    .dashboard-prompt-area { width:100%; box-sizing:border-box; border:1px solid #ddd; border-radius:3px; padding:.8rem 1rem; font-size:.95rem; font-family:inherit; resize:vertical; min-height:80px; transition:border .2s; }
+    .dashboard-prompt-area:focus { outline:none; border-color:#000; }
+    .dashboard-row { display:flex; gap:.8rem; align-items:center; flex-wrap:wrap; margin-top:.8rem; }
+    .dashboard-select { border:1px solid #ddd; border-radius:3px; padding:.5rem .8rem; font-size:.85rem; font-family:inherit; }
+    .dashboard-publish-btn { background:#000; color:#fff; border:none; border-radius:3px; padding:.6rem 1.4rem; font-size:.9rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:.5rem; transition:opacity .2s; }
+    .dashboard-publish-btn:disabled { opacity:.5; cursor:not-allowed; }
+    .dashboard-publish-btn:hover:not(:disabled) { opacity:.8; }
+    .dash-result { margin-top:1rem; padding:1rem; background:#f8f8f8; border-radius:3px; font-size:.85rem; display:none; }
+    .dash-result.success { border-left:3px solid #16a34a; }
+    .dash-result.error { border-left:3px solid #dc2626; }
+    .dash-research { margin-top:.8rem; background:#f0f4ff; border-radius:3px; padding:.8rem 1rem; font-size:.8rem; color:#444; line-height:1.6; white-space:pre-wrap; }
+
+    /* ── PROFILE EDIT ── */
+    .profile-edit-fields { display:flex; flex-direction:column; gap:.8rem; margin-top:.5rem; }
+    .profile-edit-fields label { font-size:.8rem; color:#666; display:flex; flex-direction:column; gap:.3rem; }
+    .profile-edit-fields input, .profile-edit-fields textarea {
+      border:1px solid #ddd; border-radius:3px; padding:.5rem .8rem; font-size:.9rem; font-family:inherit;
+    }
+    .profile-edit-fields textarea { resize:vertical; min-height:60px; }
+    .profile-save-btn { margin-top:.5rem; background:#000; color:#fff; border:none; border-radius:3px; padding:.5rem 1.2rem; font-size:.85rem; font-weight:700; cursor:pointer; }
+
+    /* ── GRANT ROLE (CEO only) ── */
+    .grant-row { display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
+    .grant-row input { flex:1; min-width:200px; border:1px solid #ddd; border-radius:3px; padding:.5rem .8rem; font-size:.85rem; font-family:inherit; }
+    .grant-row select { border:1px solid #ddd; border-radius:3px; padding:.5rem .8rem; font-size:.85rem; }
+    .grant-row button { background:#000; color:#fff; border:none; border-radius:3px; padding:.5rem 1rem; font-size:.85rem; font-weight:700; cursor:pointer; }
+    .grant-msg { margin-top:.5rem; font-size:.8rem; color:#444; }
+
+    /* ── SPINNER ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin-icon { display:inline-block; animation: spin .7s linear infinite; }
+  </style>
+</head>
+<body data-page="account">
+<header></header>
+
+<main class="account-page">
+
+  <!-- ① PUBLIC PROFILE (when ?uid= is in URL) -->
+  <section id="public-profile" style="display:none;">
+    <div class="pub-profile-wrap">
+      <div class="pub-profile-card">
+        <div class="pub-banner"></div>
+        <div class="pub-profile-body">
+          <img id="pub-avatar" src="" alt="Avatar" class="pub-avatar">
+          <div class="pub-info">
+            <p class="pub-name">
+              <span id="pub-name">—</span>
+              <span id="pub-badge" class="pub-badge" style="display:none;"></span>
+            </p>
+            <p id="pub-title" class="pub-title"></p>
+            <p id="pub-bio" class="pub-bio"></p>
+          </div>
+        </div>
+        <div class="pub-articles-section">
+          <h3>Artículos publicados</h3>
+          <div id="pub-articles-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② NOT LOGGED IN -->
+  <section id="account-unauthenticated" class="account-section account-centered" style="display:none;">
+    <div class="account-unauthenticated-card">
+      <i class="bi bi-person-circle account-big-icon"></i>
+      <h1>Inicia sesión en Oropezas.com</h1>
+      <p>Accede a tu cuenta para participar en los foros y personalizar tu experiencia.</p>
+      <div id="google-signin-btn" class="account-gsi-wrap"></div>
+    </div>
+  </section>
+
+  <!-- ③ CEO / PUBLISHER DASHBOARD -->
+  <section id="account-publisher" class="account-section" style="display:none;">
+    <div class="account-container">
+
+      <!-- Profile card -->
+      <div class="ceo-profile-card account-fade-in">
+        <div class="ceo-banner"></div>
+        <div class="ceo-profile-body">
+          <div class="ceo-avatar-wrap">
+            <img id="pub-me-picture" src="" alt="Foto" class="ceo-avatar">
+            <span class="ceo-verified-ring"><i class="bi bi-patch-check-fill"></i></span>
+          </div>
+          <div class="ceo-info">
+            <div class="ceo-name-row">
+              <h1 id="pub-me-name">—</h1>
+              <span id="pub-me-badge" class="ceo-badge"><i class="bi bi-patch-check-fill"></i> <span id="pub-me-role-label">Redactor</span></span>
+            </div>
+            <p id="pub-me-title" class="ceo-role"></p>
+            <p id="pub-me-email" class="ceo-email-text"></p>
+          </div>
+          <button class="account-logout-btn" onclick="OROPEZAS_AUTH.logout()">
+            <i class="bi bi-box-arrow-right"></i> Salir
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="account-stats-row account-fade-in" style="animation-delay:.08s;">
+        <div class="account-stat-card">
+          <span id="dash-stat-articles" class="account-stat-number">—</span>
+          <span class="account-stat-label">Artículos publicados</span>
+        </div>
+        <div class="account-stat-card">
+          <span id="dash-stat-subscribers" class="account-stat-number">—</span>
+          <span class="account-stat-label">Suscriptores</span>
+        </div>
+        <div class="account-stat-card">
+          <span id="dash-stat-drafts" class="account-stat-number">—</span>
+          <span class="account-stat-label">Borradores</span>
+        </div>
+      </div>
+
+      <!-- ✦ AI PUBLISH DASHBOARD ✦ -->
+      <div class="dashboard-card account-fade-in" style="animation-delay:.14s;">
+        <h2><i class="bi bi-robot"></i> Publicar con IA</h2>
+        <textarea id="dash-topic" class="dashboard-prompt-area" placeholder="Escribe el tema de la noticia. La IA investigará y redactará el artículo automáticamente…"></textarea>
+        <div class="dashboard-row">
+          <select id="dash-category" class="dashboard-select">
+            <option value="noticias">Noticias</option>
+            <option value="deportes">Deportes</option>
+            <option value="politica">Política</option>
+            <option value="cultura">Cultura</option>
+            <option value="tecnologia">Tecnología</option>
+          </select>
+          <label style="font-size:.82rem; display:flex; align-items:center; gap:.4rem; cursor:pointer;">
+            <input type="checkbox" id="dash-blast"> Blast a suscriptores
+          </label>
+          <button class="dashboard-publish-btn" id="dash-publish-btn" onclick="dashPublish()">
+            <i class="bi bi-send"></i> Publicar
+          </button>
+        </div>
+        <div id="dash-result" class="dash-result"></div>
+      </div>
+
+      <!-- Edit Profile -->
+      <div class="dashboard-card account-fade-in" style="animation-delay:.2s;">
+        <h2><i class="bi bi-pencil-square"></i> Editar perfil</h2>
+        <div class="profile-edit-fields">
+          <label>Título / Cargo
+            <input type="text" id="edit-title" placeholder="Ej: Redactor Senior, Fotógrafo..." maxlength="80">
+          </label>
+          <label>Biografía
+            <textarea id="edit-bio" placeholder="Cuéntale a los lectores quién eres..." maxlength="200"></textarea>
+          </label>
+        </div>
+        <button class="profile-save-btn" onclick="saveProfile()"><i class="bi bi-check2"></i> Guardar cambios</button>
+        <p id="edit-profile-msg" style="font-size:.8rem; margin-top:.5rem; color:#444;"></p>
+      </div>
+
+      <!-- Grant Role (CEO only) -->
+      <div id="grant-role-card" class="dashboard-card account-fade-in" style="display:none; animation-delay:.26s;">
+        <h2><i class="bi bi-shield-check"></i> Asignar roles</h2>
+        <div class="grant-row">
+          <input type="email" id="grant-email" placeholder="correo@ejemplo.com">
+          <select id="grant-role-select">
+            <option value="publisher">Publisher</option>
+            <option value="user">Usuario</option>
+          </select>
+          <button onclick="grantRole()">Asignar</button>
+        </div>
+        <p id="grant-msg" class="grant-msg"></p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ④ REGULAR USER -->
+  <section id="account-authenticated" class="account-section" style="display:none;">
+    <div class="account-container">
+      <div class="account-profile-card account-fade-in">
+        <img id="account-picture" src="" alt="Foto de perfil" class="account-avatar">
+        <div class="account-profile-info">
+          <h1 id="account-name">—</h1>
+          <p id="account-email" class="account-email">—</p>
+          <p id="account-since" class="account-since"></p>
+        </div>
+        <button class="account-logout-btn" onclick="OROPEZAS_AUTH.logout()">
+          <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+        </button>
+      </div>
+      <div class="account-actions-card account-fade-in" style="animation-delay:.1s;">
+        <h2 class="account-section-title">Explorar</h2>
+        <div class="account-actions-grid">
+          <a href="index.html" class="account-action-btn"><i class="bi bi-house-door"></i><span>Inicio</span></a>
+          <a href="noticias.html" class="account-action-btn"><i class="bi bi-newspaper"></i><span>Noticias</span></a>
+          <a href="foros.html" class="account-action-btn"><i class="bi bi-chat-square-dots"></i><span>Foros</span></a>
+          <a href="deportes.html" class="account-action-btn"><i class="bi bi-trophy"></i><span>Deportes</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+<footer></footer>
+<script src="main.js"></script>
+<script src="auth.js"></script>
+<script>
+const WORKER = 'https://oropezas.enriquegarciaoropeza.workers.dev';
+
+// ─── PUBLIC PROFILE ───────────────────────────────────────────────────────────
+async function loadPublicProfile(uid) {
+  document.getElementById('public-profile').style.display = 'block';
+  try {
+    const r = await fetch(`${WORKER}/api/user/profile?uid=${encodeURIComponent(uid)}`);
+    const u = await r.json();
+    if (!u || !u.name) { document.getElementById('pub-name').textContent = 'Perfil no encontrado'; return; }
+    document.getElementById('pub-avatar').src = u.picture || '';
+    document.getElementById('pub-name').textContent = u.displayName || u.name;
+    document.getElementById('pub-bio').textContent = u.bio || '';
+    document.getElementById('pub-title').textContent = u.title || '';
+    const badge = document.getElementById('pub-badge');
+    if (u.verified) {
+      const label = u.verifiedLabel || { ceo: 'Fundador', publisher: 'Publisher', ai: 'Official AI' }[u.role] || '';
+      badge.innerHTML = '<i class="bi bi-patch-check-fill"></i> ' + label;
+      badge.className = 'pub-badge verified ' + (u.role || '');
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+    }
+    // Load their articles — filtered by author on the server
+    const artRes = await fetch(`${WORKER}/api/articles?author_uid=${encodeURIComponent(uid)}`);
+    const artData = await artRes.json();
+    const myArts = (artData.articles || []).slice(0, 10);
+    const listEl = document.getElementById('pub-articles-list');
+    if (!myArts.length) { listEl.innerHTML = '<p style="color:#999;font-size:.85rem;">Sin artículos publicados aún.</p>'; return; }
+    listEl.innerHTML = myArts.map(a => {
+      const url = a.url || ('article.html?slug=' + (a.slug || ''));
+      const img = a.featuredImage || a.image || '';
+      return `<a href="${url}" style="display:flex;gap:.8rem;padding:.75rem 0;border-bottom:1px solid #f0f0f0;text-decoration:none;color:#000;align-items:center;">
+        ${img ? `<img src="${img}" style="width:64px;height:48px;object-fit:cover;border-radius:4px;flex-shrink:0;" onerror="this.style.display='none'">` : ''}
+        <div>
+          <div style="font-size:.75rem;color:#888;margin-bottom:2px;">${a.date || ''}</div>
+          <strong style="font-size:.88rem;line-height:1.3;">${a.title || ''}</strong>
+        </div>
+      </a>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('pub-name').textContent = 'Error cargando perfil';
+  }
+}
+
+// ─── DASHBOARD PUBLISH ────────────────────────────────────────────────────────
+async function dashPublish() {
+  const topic = document.getElementById('dash-topic').value.trim();
+  if (!topic) return;
+  const category = document.getElementById('dash-category').value;
+  const autoBlast = document.getElementById('dash-blast').checked;
+  const btn = document.getElementById('dash-publish-btn');
+  const resultEl = document.getElementById('dash-result');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin-icon">⟳</span> Investigando y redactando…';
+  resultEl.style.display = 'none';
+
+  try {
+    const user = OROPEZAS_AUTH.getUser();
+    const token = user && user.token;
+    const r = await fetch(`${WORKER}/api/dashboard/publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ topic, category, imageStyle: 'text', autoBlast })
+    });
+    const d = await r.json();
+    if (d.success) {
+      resultEl.className = 'dash-result success';
+      resultEl.innerHTML =
+        '<strong>✅ Publicado:</strong> <a href="' + d.url + '" target="_blank">' + d.article.title + '</a>' +
+        (d.research ? '<div class="dash-research"><strong>Investigación IA:</strong>\n' + d.research + '</div>' : '');
+      document.getElementById('dash-topic').value = '';
+    } else {
+      resultEl.className = 'dash-result error';
+      resultEl.innerHTML = '<strong>❌ Error:</strong> ' + (d.error || 'Error desconocido');
+    }
+    resultEl.style.display = 'block';
+  } catch(e) {
+    resultEl.className = 'dash-result error';
+    resultEl.innerHTML = '<strong>❌ Error de conexión.</strong>';
+    resultEl.style.display = 'block';
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-send"></i> Publicar';
+}
+
+// ─── SAVE PROFILE ─────────────────────────────────────────────────────────────
+async function saveProfile() {
+  const user = OROPEZAS_AUTH.getUser();
+  const token = user && user.token;
+  const title = document.getElementById('edit-title').value.trim();
+  const bio = document.getElementById('edit-bio').value.trim();
+  const msgEl = document.getElementById('edit-profile-msg');
+  msgEl.textContent = 'Guardando…';
+  try {
+    const r = await fetch(`${WORKER}/api/user/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ title, bio })
+    });
+    const d = await r.json();
+    msgEl.textContent = d.success ? '✅ Perfil actualizado.' : '❌ ' + (d.error || 'Error');
+  } catch(e) { msgEl.textContent = '❌ Error de conexión.'; }
+}
+
+// ─── GRANT ROLE ───────────────────────────────────────────────────────────────
+async function grantRole() {
+  const email = document.getElementById('grant-email').value.trim();
+  const role = document.getElementById('grant-role-select').value;
+  const msgEl = document.getElementById('grant-msg');
+  const user = OROPEZAS_AUTH.getUser();
+  const token = user && user.token;
+  msgEl.textContent = 'Procesando…';
+  try {
+    const r = await fetch(`${WORKER}/api/admin/grant-role`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ targetEmail: email, role })
+    });
+    const d = await r.json();
+    msgEl.textContent = d.success ? '✅ ' + d.message : '❌ ' + (d.error || 'Error');
+  } catch(e) { msgEl.textContent = '❌ Error de conexión.'; }
+}
+
+// ─── RENDER ACCOUNT ───────────────────────────────────────────────────────────
+async function renderAccount() {
+  const uid = new URLSearchParams(window.location.search).get('uid');
+  if (uid) { loadPublicProfile(uid); return; }
+
+  const localUser = OROPEZAS_AUTH.getUser();
+  document.getElementById('public-profile').style.display = 'none';
+  document.getElementById('account-unauthenticated').style.display = 'none';
+  document.getElementById('account-publisher').style.display = 'none';
+  document.getElementById('account-authenticated').style.display = 'none';
+
+  if (!localUser) { document.getElementById('account-unauthenticated').style.display = 'flex'; return; }
+
+  // Always fetch fresh profile from server so role/verified/title are current
+  let user = localUser;
+  try {
+    const userId = localUser.id || localUser.uid || localUser.sub || '';
+    if (userId) {
+      const r = await fetch(`${WORKER}/api/user/profile?uid=${encodeURIComponent(userId)}`);
+      if (r.ok) {
+        const fresh = await r.json();
+        if (fresh && fresh.role) {
+          user = { ...localUser, ...fresh, picture: localUser.picture || fresh.picture };
+        }
+      }
+    }
+  } catch(e) { /* use localStorage fallback */ }
+
+  if (user.role === 'ceo' || user.role === 'publisher') {
+    document.getElementById('account-publisher').style.display = 'block';
+    renderPublisher(user);
+  } else {
+    document.getElementById('account-authenticated').style.display = 'block';
+    renderUser(user);
+  }
+}
+
+function renderPublisher(user) {
+  document.getElementById('pub-me-picture').src = user.picture || '';
+  document.getElementById('pub-me-name').textContent = user.displayName || user.name || '—';
+  document.getElementById('pub-me-email').textContent = user.email || '';
+  const roleLabel = user.role === 'ceo' ? 'Fundador & CEO' : 'Publisher';
+  // Verified badge
+  const badge = document.getElementById('pub-me-badge');
+  const ring = document.querySelector('.ceo-verified-ring');
+  if (user.verified) {
+    const label = user.verifiedLabel || roleLabel;
+    document.getElementById('pub-me-role-label').textContent = label;
+    if (badge) badge.style.display = 'inline-flex';
+    if (ring) ring.style.display = 'flex';
+  } else {
+    document.getElementById('pub-me-role-label').textContent = roleLabel;
+    if (badge) badge.style.display = 'none';
+    if (ring) ring.style.display = 'none';
+  }
+  document.getElementById('pub-me-title').textContent = user.title || roleLabel;
+  document.getElementById('edit-title').value = user.title || '';
+  document.getElementById('edit-bio').value = user.bio || '';
+  if (user.role === 'ceo') document.getElementById('grant-role-card').style.display = 'block';
+  loadDashboardStats();
+}
+
+async function loadDashboardStats() {
+  try {
+    const r = await fetch(`${WORKER}/api/agent/dashboard`);
+    const d = await r.json();
+    if (d.success !== false) {
+      document.getElementById('dash-stat-articles').textContent = d.agents?.publisher?.published ?? '—';
+      document.getElementById('dash-stat-subscribers').textContent = d.audience?.subscribers ?? '—';
+      document.getElementById('dash-stat-drafts').textContent = d.agents?.writer?.drafts ?? '—';
+    }
+  } catch(e) {}
+}
+
+function renderUser(user) {
+  document.getElementById('account-picture').src = user.picture || '';
+  document.getElementById('account-name').textContent = user.name || '—';
+  document.getElementById('account-email').textContent = user.email || '—';
+  const since = user.loginAt
+    ? new Date(user.loginAt).toLocaleDateString('es-MX', {year:'numeric',month:'long',day:'numeric'})
+    : '';
+  document.getElementById('account-since').textContent = since ? 'Sesión iniciada el ' + since : '';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Check for public profile view first (no auth needed)
+  const uid = new URLSearchParams(window.location.search).get('uid');
+  if (uid) { loadPublicProfile(uid); return; }
+  renderAccount();
+  document.addEventListener('oropezas:login', renderAccount);
+  document.addEventListener('oropezas:logout', renderAccount);
+});
+</script>
+</body>
+</html>

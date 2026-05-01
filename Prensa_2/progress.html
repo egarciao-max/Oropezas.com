@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>OROPEZAS.COM - En Progreso</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #0a0a0a;
+    color: #ffffff;
+}
+
+/* NAVBAR */
+.navbar {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 30px;
+    border-bottom: 2px solid #111;
+}
+
+.logo img {
+    height: 50px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.nav-links a:hover {
+    color: #00ffcc;
+}
+
+/* HERO */
+.hero {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.hero p {
+    color: #aaa;
+}
+
+/* NEWS */
+.news {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 40px;
+}
+
+.card {
+    background: #111;
+    padding: 20px;
+    border-radius: 10px;
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    background: #1a1a1a;
+}
+
+.card h3 {
+    margin-bottom: 10px;
+}
+
+.card p {
+    color: #aaa;
+}
+
+/* FOOTER */
+footer {
+    text-align: center;
+    padding: 20px;
+    border-top: 1px solid #111;
+    color: #666;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+    <div class="logo">
+        <img src="LOGO.png" alt="Oropezas Logo">
+    </div>
+
+    <nav class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="noticias.html">Noticias</a>
+        <a href="progress.html">Deportes</a>
+        <a href="progress.html">Contacto</a>
+    </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+    <h1>OROPEZAS.COM</h1>
+    <p>Sitio en construcción 🚧 pero ya se siente el flow</p>
+</section>
+
+<!-- NEWS -->
+<section class="news">
+
+    <div class="card">
+        <h3>San Luis Open se llena</h3>
+        <p>El evento alcanzó su capacidad máxima en solo un día.</p>
+    </div>
+
+    <div class="card">
+        <h3>Pacheco avanza</h3>
+        <p>El mexicano sigue firme rumbo a la final.</p>
+    </div>
+
+    <div class="card">
+        <h3>Más noticias pronto</h3>
+        <p>Estamos cocinando contenido 🔥</p>
+    </div>
+
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <p>© 2026 Oropezas.com | enrique@oropezas.com</p>
+</footer>
+
+</body>
+</html>

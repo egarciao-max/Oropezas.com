@@ -1,0 +1,43 @@
+<div class="header-container">
+    <a href="/index.html" class="logo">
+        <img src="/LOGO.jpeg" alt="Oropezas.com">
+    </a>
+
+    <nav>
+        <a href="/index.html">Inicio</a>
+        <a href="/noticias.html">Noticias</a>
+        <a href="/deportes.html">Deportes</a>
+        <a href="/contacto.html">Contacto</a>
+        <a href="/foros.html">Foros</a>
+    </nav>
+
+    <!-- AUTH CONTROLS -->
+    <div class="auth-nav-controls">
+        <!-- Language toggle -->
+        <button class="lang-toggle-btn" onclick="window.i18n && window.i18n.toggle()" title="Switch language"
+          style="background:none;border:1px solid #ddd;border-radius:4px;padding:4px 10px;font-size:.78rem;cursor:pointer;font-weight:600;letter-spacing:.03em;color:#333;">EN</button>
+        <!-- Botón Iniciar sesión (visible cuando NO hay sesión) -->
+        <button id="auth-login-btn" class="auth-login-btn" onclick="OROPEZAS_AUTH.openLoginModal()" style="display:flex;" aria-label="Iniciar sesión">
+            <i class="bi bi-person"></i>
+            <span class="auth-login-label">Entrar</span>
+        </button>
+
+        <!-- Avatar + menú (visible cuando SÍ hay sesión) -->
+        <div id="auth-user-avatar" class="auth-user-avatar" onclick="OROPEZAS_AUTH.toggleUserMenu()" style="display:none;" aria-label="Mi cuenta">
+            <img id="auth-user-picture" src="" alt="Perfil" class="auth-avatar-img">
+            <span id="auth-user-name" class="auth-user-name-label"></span>
+            <i class="bi bi-chevron-down auth-chevron"></i>
+        </div>
+
+        <!-- Menú desplegable -->
+        <div id="auth-user-menu" class="auth-user-menu">
+            <a href="/account.html" class="auth-menu-item">
+                <i class="bi bi-person-circle"></i> Mi cuenta
+            </a>
+            <hr class="auth-menu-divider">
+            <button class="auth-menu-item auth-menu-logout" onclick="OROPEZAS_AUTH.logout()">
+                <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+            </button>
+        </div>
+    </div>
+</div>

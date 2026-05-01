@@ -1,0 +1,36 @@
+{
+  "id": "san-luis-open-2026",
+  "slug": "san-luis-open-2026",
+  "title": "San Luis Open 2026: tradición y talento",
+  "excerpt": "El torneo reafirma su importancia en el circuito Challenger.",
+  "category": "deportes",
+  "date": "2026-04-04",
+  "author": "Enrique Oropeza",
+  "readingTime": "4 min de lectura",
+  "videoFile": "VIDEOS/OPEN1.mp4",
+  "videoPoster": "FOTOS/preview.jpeg",
+  "tags": ["tenis", "slp open"],
+  "credits": {
+    "name": "Enrique Oropeza",
+    "publishedText": "Publicado el 4 de abril de 2026 • Oropezas.com"
+  },
+  "content": [
+    {
+      "type": "paragraph",
+      "html": "<strong>🎾 El regreso de un clásico del tenis.</strong>"
+    },
+    {
+      "type": "paragraph",
+      "html": "El torneo se consolida como uno de los más relevantes del Challenger Tour."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Historia"
+    },
+    {
+      "type": "paragraph",
+      "html": "Con orígenes en 1955, es uno de los torneos más antiguos del continente."
+    }
+  ]
+}

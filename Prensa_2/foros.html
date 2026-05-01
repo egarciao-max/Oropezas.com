@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foros - OROPEZAS.COM</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body data-page="foros">
+
+<header></header>
+
+<main class="foros-page">
+  <div class="foros-container">
+
+    <!-- Hero -->
+    <div class="foros-hero">
+      <h1 class="foros-title">Foros de la Comunidad</h1>
+      <p class="foros-subtitle">Discute, opina y conecta con la comunidad de San Luis Potosí. Moderado por IA para mantener un espacio respetuoso.</p>
+      <button id="foros-new-btn" class="foros-new-btn" onclick="forosApp.openNewThread()" style="display:none;">
+        <i class="bi bi-plus-lg"></i> Nuevo tema
+      </button>
+    </div>
+
+    <!-- Categorías -->
+    <div class="foros-categories">
+      <button class="foros-cat-btn active" data-cat="todos" onclick="forosApp.filterCat(this, 'todos')">Todos</button>
+      <button class="foros-cat-btn" data-cat="noticias" onclick="forosApp.filterCat(this, 'noticias')">Noticias</button>
+      <button class="foros-cat-btn" data-cat="deportes" onclick="forosApp.filterCat(this, 'deportes')">Deportes</button>
+      <button class="foros-cat-btn" data-cat="politica" onclick="forosApp.filterCat(this, 'politica')">Política</button>
+      <button class="foros-cat-btn" data-cat="comunidad" onclick="forosApp.filterCat(this, 'comunidad')">Comunidad</button>
+      <button class="foros-cat-btn" data-cat="cultura" onclick="forosApp.filterCat(this, 'cultura')">Cultura</button>
+    </div>
+
+    <!-- Lista de hilos -->
+    <div id="foros-list" class="foros-list">
+      <div class="foros-loading">
+        <i class="bi bi-arrow-repeat foros-spinner"></i>
+        <span>Cargando foros...</span>
+      </div>
+    </div>
+
+    <!-- Paginación -->
+    <div id="foros-pagination" class="foros-pagination" style="display:none;">
+      <button id="foros-prev" class="foros-page-btn" onclick="forosApp.prevPage()"><i class="bi bi-chevron-left"></i></button>
+      <span id="foros-page-info" class="foros-page-info"></span>
+      <button id="foros-next" class="foros-page-btn" onclick="forosApp.nextPage()"><i class="bi bi-chevron-right"></i></button>
+    </div>
+  </div>
+</main>
+
+<!-- Modal: Nuevo hilo -->
+<div id="foros-modal" class="foros-modal">
+  <div class="foros-modal-backdrop" onclick="forosApp.closeModal()"></div>
+  <div class="foros-modal-card">
+    <button class="foros-modal-close" onclick="forosApp.closeModal()">&times;</button>
+    <h2 class="foros-modal-title">Nuevo tema</h2>
+    <div class="foros-form">
+      <div class="foros-field">
+        <label>Categoría</label>
+        <select id="foros-new-cat">
+          <option value="noticias">Noticias</option>
+          <option value="deportes">Deportes</option>
+          <option value="politica">Política</option>
+          <option value="comunidad" selected>Comunidad</option>
+          <option value="cultura">Cultura</option>
+        </select>
+      </div>
+      <div class="foros-field">
+        <label>Título</label>
+        <input id="foros-new-title" type="text" placeholder="¿De qué quieres hablar?" maxlength="120">
+      </div>
+      <div class="foros-field">
+        <label>Tu mensaje</label>
+        <textarea id="foros-new-body" placeholder="Escribe tu mensaje aquí..." rows="5" maxlength="2000"></textarea>
+        <span class="foros-char-count"><span id="foros-body-count">0</span>/2000</span>
+      </div>
+      <div id="foros-new-error" class="foros-error" style="display:none;"></div>
+      <button id="foros-new-submit" class="foros-submit-btn" onclick="forosApp.submitThread()">
+        <i class="bi bi-send"></i> Publicar
+      </button>
+    </div>
+  </div>
+</div>
+
+<footer></footer>
+
+<script src="main.js"></script>
+<script src="auth.js"></script>
+<script>
+const WORKER = 'https://oropezas.enriquegarciaoropeza.workers.dev';
+const PER_PAGE = 10;
+
+const forosApp = (() => {
+  let threads = [];
+  let filtered = [];
+  let currentCat = 'todos';
+  let currentPage = 1;
+
+  async function load() {
+    try {
+      const res = await fetch(`${WORKER}/api/foros/threads`);
+      const data = await res.json();
+      threads = data.threads || [];
+      applyFilter();
+    } catch (e) {
+      document.getElementById('foros-list').innerHTML = `
+        <div class="foros-empty">
+          <i class="bi bi-exclamation-circle"></i>
+          <p>No se pudo cargar el foro. Intenta más tarde.</p>
+        </div>`;
+    }
+  }
+
+  function applyFilter() {
+    filtered = currentCat === 'todos'
+      ? [...threads]
+      : threads.filter(t => t.category === currentCat);
+    currentPage = 1;
+    render();
+  }
+
+  function render() {
+    const list = document.getElementById('foros-list');
+    const user = OROPEZAS_AUTH.getUser();
+
+    // Show new thread button if logged in
+    document.getElementById('foros-new-btn').style.display = user ? 'flex' : 'none';
+
+    if (filtered.length === 0) {
+      list.innerHTML = `
+        <div class="foros-empty">
+          <i class="bi bi-chat-square-dots"></i>
+          <p>Aún no hay temas en esta categoría.</p>
+          ${user ? '<p>¡Sé el primero en publicar!</p>' : '<p>Inicia sesión para crear el primer tema.</p>'}
+        </div>`;
+      document.getElementById('foros-pagination').style.display = 'none';
+      return;
+    }
+
+    const start = (currentPage - 1) * PER_PAGE;
+    const page  = filtered.slice(start, start + PER_PAGE);
+    const totalPages = Math.ceil(filtered.length / PER_PAGE);
+
+    list.innerHTML = page.map(t => {
+      const isFounder = t.authorEmail === 'enrique@oropezas.com';
+      const date = new Date(t.createdAt).toLocaleDateString('es-MX', {day:'numeric', month:'short', year:'numeric'});
+      return `
+        <a href="foro-hilo.html?id=${t.id}" class="foros-thread-card">
+          <div class="foros-thread-meta">
+            <span class="foros-cat-tag foros-cat-${t.category}">${t.category}</span>
+            ${isFounder ? '<span class="foros-verified-badge"><i class="bi bi-patch-check-fill"></i> Fundador</span>' : ''}
+          </div>
+          <h3 class="foros-thread-title">${escHtml(t.title)}</h3>
+          <p class="foros-thread-excerpt">${escHtml((t.body || '').slice(0, 140))}${(t.body||'').length > 140 ? '…' : ''}</p>
+          <div class="foros-thread-footer">
+            <span class="foros-thread-author">
+              ${t.authorPicture ? `<img src="${t.authorPicture}" class="foros-author-avatar">` : '<i class="bi bi-person-circle"></i>'}
+              ${escHtml(t.authorName)}
+            </span>
+            <span class="foros-thread-stats">
+              <i class="bi bi-chat-dots"></i> ${t.replyCount || 0}
+              <i class="bi bi-eye ms"></i> ${t.views || 0}
+              <span class="foros-thread-date">${date}</span>
+            </span>
+          </div>
+        </a>`;
+    }).join('');
+
+    // Pagination
+    const pag = document.getElementById('foros-pagination');
+    pag.style.display = totalPages > 1 ? 'flex' : 'none';
+    document.getElementById('foros-page-info').textContent = `Página ${currentPage} de ${totalPages}`;
+    document.getElementById('foros-prev').disabled = currentPage === 1;
+    document.getElementById('foros-next').disabled = currentPage === totalPages;
+  }
+
+  function filterCat(btn, cat) {
+    document.querySelectorAll('.foros-cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCat = cat;
+    applyFilter();
+  }
+
+  function prevPage() { if (currentPage > 1) { currentPage--; render(); } }
+  function nextPage() {
+    if (currentPage < Math.ceil(filtered.length / PER_PAGE)) { currentPage++; render(); }
+  }
+
+  function openNewThread() {
+    if (!OROPEZAS_AUTH.isLoggedIn()) { OROPEZAS_AUTH.openLoginModal(); return; }
+    document.getElementById('foros-modal').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('foros-modal').classList.remove('open');
+    document.getElementById('foros-new-error').style.display = 'none';
+  }
+
+  async function submitThread() {
+    const user = OROPEZAS_AUTH.getUser();
+    if (!user) { OROPEZAS_AUTH.openLoginModal(); return; }
+
+    const title = document.getElementById('foros-new-title').value.trim();
+    const body  = document.getElementById('foros-new-body').value.trim();
+    const cat   = document.getElementById('foros-new-cat').value;
+    const errEl = document.getElementById('foros-new-error');
+    const btn   = document.getElementById('foros-new-submit');
+
+    if (!title || title.length < 5) { showErr('El título debe tener al menos 5 caracteres.'); return; }
+    if (!body  || body.length  < 10) { showErr('El mensaje debe tener al menos 10 caracteres.'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Moderando…';
+
+    try {
+      const res = await fetch(`${WORKER}/api/foros/threads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title, body, category: cat,
+          authorId: user.id,
+          authorName: user.name,
+          authorEmail: user.email,
+          authorPicture: user.picture,
+          token: user.token,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeModal();
+        document.getElementById('foros-new-title').value = '';
+        document.getElementById('foros-new-body').value = '';
+        await load();
+      } else if (data.moderated) {
+        showErr(`⚠️ Tu mensaje fue rechazado por el moderador IA: "${data.reason}"`);
+      } else {
+        showErr(data.error || 'Error al publicar. Intenta de nuevo.');
+      }
+    } catch (e) {
+      showErr('Error de conexión. Intenta de nuevo.');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-send"></i> Publicar';
+  }
+
+  function showErr(msg) {
+    const el = document.getElementById('foros-new-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function escHtml(str) {
+    return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Char counter
+  document.addEventListener('DOMContentLoaded', () => {
+    const ta = document.getElementById('foros-new-body');
+    if (ta) ta.addEventListener('input', () => {
+      document.getElementById('foros-body-count').textContent = ta.value.length;
+    });
+    load();
+    document.addEventListener('oropezas:login',  () => render());
+    document.addEventListener('oropezas:logout', () => render());
+  });
+
+  return { load, filterCat, prevPage, nextPage, openNewThread, closeModal, submitThread };
+})();
+</script>
+</body>
+</html>

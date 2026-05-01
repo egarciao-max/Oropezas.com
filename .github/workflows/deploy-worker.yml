@@ -1,0 +1,39 @@
+name: Deploy Oropezas Worker
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'oropezas/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Cloudflare Workers
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wrangler
+        run: npm install -g wrangler@3.90.0
+
+      - name: Upload Stripe Secrets
+        working-directory: oropezas
+        run: |
+          echo "${{ secrets.STRIPE_SECRET_KEY }}" | wrangler secret put STRIPE_SECRET_KEY --name oropezas
+          echo "${{ secrets.STRIPE_PUBLISHABLE_KEY }}" | wrangler secret put STRIPE_PUBLISHABLE_KEY --name oropezas
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        continue-on-error: true
+
+      - name: Deploy Worker
+        working-directory: oropezas
+        run: wrangler deploy --config wrangler.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

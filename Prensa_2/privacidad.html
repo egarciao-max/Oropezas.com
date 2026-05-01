@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="styles.css" >
+    <title>Política de Privacidad - OROPEZAS.COM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --black: #000000;
+            --white: #ffffff;
+            --gray-light: #f5f5f5;
+            --gray-border: #e0e0e0;
+            --gray-text: #666666;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            color: var(--black);
+            background: var(--white);
+            line-height: 1.7;
+        }
+
+        /* HEADER */
+        header {
+            border-bottom: 1px solid var(--gray-border);
+            padding: 2rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--white);
+        }
+
+        .header-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            text-decoration: none;
+            color: var(--black);
+            margin-bottom: 1.5rem;
+            display: block;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .tagline {
+            text-align: center;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            color: var(--gray-text);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        nav {
+            display: flex;
+            gap: 2.5rem;
+            justify-content: center;
+            align-items: center;
+            border-top: 1px solid var(--gray-border);
+            padding-top: 1rem;
+        }
+
+        nav a {
+            color: var(--black);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: color 0.2s ease;
+            padding: 0.5rem 0;
+        }
+
+        nav a:hover {
+            color: var(--gray-text);
+        }
+
+        /* MAIN CONTENT */
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            color: var(--black);
+            letter-spacing: -0.02em;
+        }
+
+        .page-subtitle {
+            font-size: 0.85rem;
+            color: var(--gray-text);
+            margin-bottom: 2rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .content h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: var(--black);
+            line-height: 1.3;
+        }
+
+        .content h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+            color: var(--black);
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--gray-text);
+            line-height: 1.8;
+        }
+
+        .content ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .content li {
+            margin-bottom: 0.6rem;
+            color: var(--gray-text);
+            line-height: 1.8;
+        }
+
+        /* FOOTER */
+        footer {
+            background: var(--gray-light);
+            padding: 3rem 0;
+            border-top: 1px solid var(--gray-border);
+            margin-top: 3rem;
+        }
+
+        .footer-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h3 {
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--black);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-section p {
+            font-size: 0.85rem;
+            line-height: 1.8;
+            color: var(--gray-text);
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .footer-links a {
+            color: var(--gray-text);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--black);
+        }
+
+        .footer-bottom {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 2rem 0;
+            border-top: 1px solid var(--gray-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--gray-text);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .social-links a {
+            color: var(--gray-text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .social-links a:hover {
+            color: var(--black);
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 2rem 1.5rem;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            main {
+                padding: 2rem 1rem;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .page-title {
+                font-size: 1.4rem;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+      
+    </header>
+
+    <main>
+        <h1 class="page-title">Política de Privacidad</h1>
+        <p class="page-subtitle">Última actualización: 3 de abril de 2024</p>
+
+        <div class="content">
+            <p>En OROPEZAS.COM, respetamos tu privacidad y estamos comprometidos con proteger tus datos personales. Esta política de privacidad explica cómo recopilamos, utilizamos y salvaguardamos tu información.</p>
+
+            <h2>1. Información que Recopilamos</h2>
+            <p>Recopilamos información de varias formas:</p>
+            <ul>
+                <li><strong>Información de navegación:</strong> Cuando visitas nuestro sitio, recopilamos automáticamente información sobre tu dispositivo, navegador, dirección IP y patrones de navegación mediante cookies y tecnologías similares.</li>
+                <li><strong>Información de contacto:</strong> Si nos contactas, podemos recopilar tu nombre, correo electrónico y el contenido de tu mensaje.</li>
+                <li><strong>Información voluntaria:</strong> Cualquier información que proporciones voluntariamente, como comentarios o suscripciones.</li>
+            </ul>
+
+            <h2>2. Uso de tu Información</h2>
+            <p>Utilizamos la información recopilada para:</p>
+            <ul>
+                <li>Mejorar y personalizar tu experiencia en nuestro sitio</li>
+                <li>Analizar tendencias de uso y preferencias de contenido</li>
+                <li>Responder a tus consultas y comentarios</li>
+                <li>Enviar actualizaciones sobre noticias y contenido relevante (si lo autorizas)</li>
+                <li>Cumplir con obligaciones legales</li>
+            </ul>
+
+            <h2>3. Cookies y Tecnologías de Seguimiento</h2>
+            <p>Nuestro sitio utiliza cookies para recordar tus preferencias y mejorar tu experiencia. Puedes controlar el uso de cookies a través de la configuración de tu navegador. Las cookies que utilizamos incluyen:</p>
+            <ul>
+                <li><strong>Cookies esenciales:</strong> Necesarias para el funcionamiento del sitio</li>
+                <li><strong>Cookies analíticas:</strong> Nos ayudan a entender cómo los visitantes usan el sitio</li>
+                <li><strong>Cookies de preferencia:</strong> Recuerdan tus ajustes personales</li>
+            </ul>
+
+            <h2>4. Compartición de Datos</h2>
+            <p>No vendemos, comerciamos ni transferimos tu información personal identificable a terceros sin tu consentimiento. Podemos compartir información anónima y agregada con socios publicitarios y analíticos para mejorar nuestros servicios.</p>
+
+            <h2>5. Seguridad de Datos</h2>
+            <p>Implementamos medidas de seguridad técnicas, administrativas y físicas para proteger tu información personal contra acceso, alteración, divulgación o destrucción no autorizada. Sin embargo, ningún método de transmisión por internet es 100% seguro.</p>
+
+            <h2>6. Retención de Datos</h2>
+            <p>Retenemos tu información personal durante el tiempo que sea necesario para cumplir con los propósitos descritos en esta política, a menos que la ley requiera un período de retención más prolongado.</p>
+
+            <h2>7. Tus Derechos</h2>
+            <p>Tienes derecho a:</p>
+            <ul>
+                <li>Acceder a los datos personales que hemos recopilado sobre ti</li>
+                <li>Solicitar la corrección de datos inexactos</li>
+                <li>Solicitar la eliminación de tus datos</li>
+                <li>Optar por no recibir comunicaciones de marketing</li>
+                <li>Retirar tu consentimiento en cualquier momento</li>
+            </ul>
+
+            <h2>8. Enlaces a Terceros</h2>
+            <p>Nuestro sitio puede contener enlaces a sitios web de terceros. No somos responsables de las prácticas de privacidad de estos sitios. Te recomendamos revisar sus políticas de privacidad antes de proporcionar información personal.</p>
+
+            <h2>9. Cambios a esta Política</h2>
+            <p>Nos reservamos el derecho de actualizar esta política de privacidad en cualquier momento. Los cambios serán efectivos inmediatamente tras su publicación en el sitio. Tu uso continuado del sitio constituye tu aceptación de los cambios.</p>
+
+            <h2>10. Contacto</h2>
+            <p>Si tienes preguntas sobre esta política de privacidad o nuestras prácticas de privacidad, contáctanos en:</p>
+            <p><strong>Correo electrónico:</strong> enrique@oropezas.com</p>
+        </div>
+    </main>
+<script src="main.js"></script>
+    <footer>
+    
+    </footer>
+<!-- ========== OROPEZAS AI PRO MAX ULTRA ========= -->
+<style>
+#chat-bot-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #000;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 16px;
+  cursor: pointer;
+  z-index: 9999;
+}
+
+#chat-window {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 360px;
+  max-width: 92vw;
+  height: 520px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: system-ui;
+}
+
+.chat-header {
+  background: #000;
+  color: white;
+  padding: 14px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  background: #fafafa;
+}
+
+.msg {
+  margin: 8px 0;
+  max-width: 80%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  line-height: 1.4;
+  animation: fade 0.2s ease;
+}
+
+.user {
+  background: #000;
+  color: white;
+  margin-left: auto;
+}
+
+.bot {
+  background: #e9e9e9;
+  color: #111;
+}
+
+.chat-input {
+  border-top: 1px solid #eee;
+  display: flex;
+  align-items: flex-end;
+  padding: 8px;
+}
+
+.chat-input textarea {
+  flex: 1;
+  resize: none;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  max-height: 100px;
+  padding: 8px;
+}
+
+.chat-input button {
+  background: #000;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.typing {
+  display: flex;
+  gap: 4px;
+}
+
+.typing span {
+  width: 6px;
+  height: 6px;
+  background: #888;
+  border-radius: 50%;
+  animation: bounce 1.2s infinite;
+}
+
+.typing span:nth-child(2){animation-delay:0.2s;}
+.typing span:nth-child(3){animation-delay:0.4s;}
+
+@keyframes bounce {
+  0%,80%,100%{transform:scale(0);}
+  40%{transform:scale(1);}
+}
+
+@keyframes fade {
+  from{opacity:0; transform:translateY(8px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+.msg strong {font-weight:700;}
+.msg em {font-style:italic;}
+.msg a {color:#007aff; text-decoration:none;}
+.msg ul {padding-left:18px;}
+</style>
+
+<button id="chat-bot-btn">💬</button>
+
+<div id="chat-window">
+  <div class="chat-header">
+    Oropezas AI
+    <span id="close" style="cursor:pointer">✕</span>
+  </div>
+
+  <div class="chat-messages" id="messages">
+    <div class="msg bot">Hola 👋 soy tu asistente. Pregunta lo que quieras.</div>
+  </div>
+
+  <div class="chat-input">
+    <textarea id="input" rows="1" placeholder="Escribe..."></textarea>
+    <button id="send">➤</button>
+  </div>
+</div>
+
+<script>
+const API = "https://oropezas.enriquegarciaoropeza.workers.dev";
+
+const btn = document.getElementById("chat-bot-btn");
+const win = document.getElementById("chat-window");
+const close = document.getElementById("close");
+const input = document.getElementById("input");
+const send = document.getElementById("send");
+const messages = document.getElementById("messages");
+
+btn.onclick = () => {
+  win.style.display = win.style.display === "flex" ? "none" : "flex";
+  input.focus();
+};
+
+close.onclick = () => win.style.display = "none";
+
+// AUTO RESIZE
+input.addEventListener("input", () => {
+  input.style.height = "auto";
+  input.style.height = input.scrollHeight + "px";
+});
+
+// ENTER SEND
+input.addEventListener("keydown", e => {
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    sendMessage(input.value);
+  }
+});
+
+// MARKDOWN
+function md(text){
+  return text
+    .replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g,"<em>$1</em>")
+    .replace(/\[(.*?)\]\((.*?)\)/g,'<a href="$2" target="_blank">$1</a>')
+    .replace(/\n/g,"<br>");
+}
+
+// ADD MSG
+function add(text,type){
+  const div = document.createElement("div");
+  div.className = "msg " + type;
+  div.innerHTML = md(text);
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// LOADER
+function loader(){
+  const div = document.createElement("div");
+  div.className = "msg bot typing";
+  div.id = "typing";
+  div.innerHTML = "<span></span><span></span><span></span>";
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function removeLoader(){
+  const t = document.getElementById("typing");
+  if(t) t.remove();
+}
+
+// SEND
+async function sendMessage(text){
+  if(!text.trim()) return;
+
+  add(text,"user");
+  input.value = "";
+  input.style.height = "auto";
+
+  loader();
+
+  try{
+    const res = await fetch(API,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({message:text})
+    });
+
+    const data = await res.json();
+    removeLoader();
+
+    smartType(data.reply || "Error");
+
+  }catch{
+    removeLoader();
+    add("Error de conexión.","bot");
+  }
+}
+
+// SMART TYPE (chunk, no letra cringe)
+function smartType(text){
+  const div = document.createElement("div");
+  div.className = "msg bot";
+  messages.appendChild(div);
+
+  let i = 0;
+  function chunk(){
+    if(i < text.length){
+      div.innerHTML = md(text.slice(0, i));
+      i += 3; // velocidad pro
+      messages.scrollTop = messages.scrollHeight;
+      setTimeout(chunk, 15);
+    }
+  }
+  chunk();
+}
+
+send.onclick = () => sendMessage(input.value);
+</script>
+
+</body>
+</html>
