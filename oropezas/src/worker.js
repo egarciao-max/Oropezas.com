@@ -280,6 +280,8 @@ async function handleForosRoutes(pathname, request, env, corsHeaders) {
 const ALLOWED_ORIGINS = [
   'https://oropezas.com',
   'https://www.oropezas.com',
+  'https://kelowna.oropezas.com',
+  'https://www.kelowna.oropezas.com',
   'http://localhost:3000',
   'http://localhost:5000',
   'http://localhost:5500',
@@ -288,6 +290,7 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:3000',
   'http://127.0.0.1:8000',
   'https://oropezas.pages.dev',
+  'https://kelowna-oropezas.pages.dev',
   /^https:\/\/[a-zA-Z0-9-]+\.oropezas\.pages\.dev$/,
   /^https:\/\/[a-zA-Z0-9-]+\.oropezas\.com$/
 ];
@@ -758,7 +761,7 @@ export default {
           });
         }
         if (body.message) {
-          const reply = await handleChatMessage(body.message, env);
+          const reply = await handleChatMessage(body.message, env, body.site);
           return new Response(JSON.stringify({ reply }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
@@ -1309,8 +1312,10 @@ function getCorsHeaders(origin) {
   };
 }
 
-async function handleChatMessage(message, env) {
-  let sitioContenido = await env.SITIO_CONTENIDO.get('contenido_completo');
+async function handleChatMessage(message, env, site) {
+  const isKelowna = site === 'kelowna';
+  const kvKey = isKelowna ? 'kelowna_contenido' : 'contenido_completo';
+  let sitioContenido = await env.SITIO_CONTENIDO.get(kvKey);
   let contexto = '';
   if (sitioContenido) {
     try {
@@ -1347,7 +1352,9 @@ async function handleChatMessage(message, env) {
   }
 
   if (!sitioContenido) {
-    return "El bot está indexando el contenido. Espera unos minutos.";
+    return isKelowna
+      ? "The bot is indexing Kelowna content. Please try again in a few minutes."
+      : "El bot está indexando el contenido. Espera unos minutos.";
   }
 
   const GEMINI_API_KEY = env.GEMINI_API_KEY;
@@ -1357,9 +1364,13 @@ async function handleChatMessage(message, env) {
 
   const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-  const systemInstruction = `Eres asistente exclusivo de Oropezas.com.
+  const siteName = isKelowna ? 'Kelowna.Oropezas.com' : 'Oropezas.com';
+  const siteDesc = isKelowna
+    ? 'un sitio de noticias locales de Kelowna, BC, Canadá'
+    : 'un periódico digital de San Luis Potosí';
+  const systemInstruction = `Eres asistente exclusivo de ${siteName}.
 Responde ÚNICAMENTE con contenido del sitio.
-Si no puedes responder, di exactamente: "Te puedo ayudar en algo relacionado sobre el periódico Oropezas.com"
+Si no puedes responder, di exactamente: "Te puedo ayudar en algo relacionado sobre ${siteName}"
 Considera clima, saludos, y si dicen "limon" eres Gemini normal.
 Contenido: ${contexto}`;
 
@@ -1376,7 +1387,7 @@ Contenido: ${contexto}`;
     if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
       return data.candidates[0].content.parts[0].text;
     }
-    return 'Te puedo ayudar en algo relacionado sobre el periódico Oropezas.com';
+    return `Te puedo ayudar en algo relacionado sobre ${isKelowna ? 'Kelowna.Oropezas.com' : 'el periódico Oropezas.com'}`;
   } catch (error) {
     return 'Lo siento, hubo un error. Intenta de nuevo.';
   }
