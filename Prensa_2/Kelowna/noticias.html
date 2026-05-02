@@ -4,75 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="../styles.css">
-<title>Contact - KELOWNA.OROPEZAS.COM</title>
+<title>News - KELOWNA.OROPEZAS.COM</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
-<body data-page="contacto" data-site="kelowna">
+<body data-page="noticias" data-site="kelowna">
 
 <header></header>
 
 <main>
-    <div style="text-align:center; margin-bottom:1.5rem; padding:0.75rem; background:var(--gray-light); border-radius:2px;">
-        <p style="font-size:0.85rem; letter-spacing:0.1em; color:var(--gray-text); text-transform:uppercase; font-weight:500;">
-            Acting CEO of Kelowna: <strong style="color:var(--black);">Marty Strikwerda</strong>
-        </p>
-    </div>
-
-    <h1 class="page-title">Contact</h1>
-    <p class="page-description">Get in touch with our team.</p>
-
-    <section class="contact-grid">
-        <!-- Acting CEO Kelowna -->
-        <div class="contact-card">
-            <h2>Marty Strikwerda</h2>
-            <p>Acting CEO of Kelowna</p>
-        </div>
-
-        <!-- Oropezas Founders -->
-        <div class="contact-card">
-            <h2>Enrique Oropeza</h2>
-            <p>CEO & Founder</p>
-            <a href="mailto:enrique@oropezas.com">enrique@oropezas.com</a>
-        </div>
-
-        <div class="contact-card">
-            <h2>Marijo Macías</h2>
-            <p>CEO & Founder</p>
-            <a href="mailto:majo@oropezas.com">majo@oropezas.com</a>
-        </div>
-
-        <div class="contact-card">
-            <h2>Fer Serna</h2>
-            <p>CEO & Founder</p>
-            <a href="mailto:fer@oropezas.com">fer@oropezas.com</a>
-        </div>
-
-        <div class="contact-card">
-            <h2>Press Inquiries</h2>
-            <p>Media / Press</p>
-            <a href="mailto:press@oropezas.com">press@oropezas.com</a>
-        </div>
-
-        <div class="contact-card">
-            <h2>Advertising</h2>
-            <p>Advertising / Ads</p>
-            <a href="mailto:ad@oropezas.com">ad@oropezas.com</a>
-        </div>
-    </section>
-
-    <!-- Subscribe section -->
-    <section class="subscribe-section" style="max-width:550px; margin:3rem auto 0;">
-        <h2 style="text-align:center; font-size:0.9rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--gray-text); font-weight:700; margin-bottom:2rem; padding-bottom:1rem; border-bottom:1px solid var(--gray-border);">Subscribe</h2>
-        <p style="color:var(--gray-text); margin-bottom:1.5rem; text-align:center;">Get the latest Kelowna news delivered to your inbox.</p>
-        <form id="subscribe-form" style="display:flex; flex-direction:column; gap:1rem;">
-            <label style="font-size:0.85rem; font-weight:600; color:var(--black);">First Name</label>
-            <input type="text" id="sub-nombre" placeholder="Your first name" required style="padding:0.75rem; border:1px solid #ddd; border-radius:2px; font-size:1rem;">
-            <label style="font-size:0.85rem; font-weight:600; color:var(--black);">Email</label>
-            <input type="email" id="sub-email" placeholder="your@email.com" required style="padding:0.75rem; border:1px solid #ddd; border-radius:2px; font-size:1rem;">
-            <button type="submit" id="sub-btn" style="padding:0.75rem 1.5rem; background:var(--black); color:var(--white); border:none; font-size:0.8rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer; border-radius:2px;">Subscribe to Newsletter</button>
-            <p id="sub-status" style="display:none; color:var(--success); font-weight:600; text-align:center;"></p>
-        </form>
-    </section>
+  <h1 class="page-title">All Articles</h1>
+  <p class="page-description">Everything happening in Kelowna.</p>
+  <div class="articles-grid" id="articles-grid"></div>
 </main>
 
 <footer></footer>
@@ -107,7 +49,6 @@
 <script>
 const API = "https://oropezas.enriquegarciaoropeza.workers.dev";
 
-// Chat bot
 const btn = document.getElementById("chat-bot-btn");
 const win = document.getElementById("chat-window");
 const close = document.getElementById("close");
@@ -126,34 +67,38 @@ async function sendMessage(text){ if(!text.trim()) return; add(text,"user"); inp
 function type(text){ const d=document.createElement("div"); d.className="msg bot"; messages.appendChild(d); let i=0; function c(){ if(i<text.length){ d.innerHTML=md(text.slice(0,i)); i+=3; messages.scrollTop=messages.scrollHeight; setTimeout(c,15); } } c(); }
 send.onclick = () => sendMessage(input.value);
 
-// Subscribe form only (no contact form)
-document.getElementById('subscribe-form').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const btn = document.getElementById('sub-btn');
-  btn.textContent = 'Subscribing...';
-  btn.disabled = true;
-  try {
-    const r = await fetch(API + '/api/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nombre: document.getElementById('sub-nombre').value,
-        email: document.getElementById('sub-email').value
-      })
+// Load news with site filter
+fetch(API + '/api/articles?site=kelowna')
+  .then(r => r.json())
+  .then(data => {
+    const articles = data.articles || [];
+    const grid = document.getElementById('articles-grid');
+    if (articles.length === 0) {
+      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--gray-text);padding:3rem;">No articles yet. Check back soon!</p>';
+      return;
+    }
+    articles.forEach(a => {
+      const card = document.createElement('div');
+      card.className = 'article-card';
+      card.style.cursor = 'pointer';
+      card.onclick = () => location.href = 'article.html?slug=' + a.slug;
+      card.innerHTML = `
+        <div class="article-card-image">
+          <img src="${a.image || '../LOGO.jpeg'}" alt="${a.title}" style="width:100%;height:100%;object-fit:cover;"
+            onerror="this.style.display='none';this.parentElement.style.background='var(--gray-light)';this.parentElement.innerHTML='<span style=font-size:2.5rem;color:var(--gray-text);>📰</span>';">
+        </div>
+        <span class="article-card-category">${a.category || 'News'}</span>
+        <h3>${a.title}</h3>
+        <p class="article-card-excerpt">${a.excerpt || ''}</p>
+        <span class="article-card-date">${a.date || ''}</span>
+        <span class="article-card-link">Read more →</span>`;
+      grid.appendChild(card);
     });
-    const d = await r.json();
-    const status = document.getElementById('sub-status');
-    status.textContent = d.success ? 'You are subscribed! Check your inbox.' : (d.error || 'Error subscribing');
-    status.style.display = 'block';
-    if(d.success) { document.getElementById('sub-nombre').value=''; document.getElementById('sub-email').value=''; }
-  } catch {
-    const status = document.getElementById('sub-status');
-    status.textContent = 'Connection error.';
-    status.style.display = 'block';
-  }
-  btn.textContent = 'Subscribe to Newsletter';
-  btn.disabled = false;
-});
+  })
+  .catch(err => {
+    console.error('Error:', err);
+    document.getElementById('articles-grid').innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--gray-text);padding:3rem;">Unable to load articles.</p>';
+  });
 </script>
 
 <script src="main.js"></script>
