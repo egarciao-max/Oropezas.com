@@ -35,8 +35,10 @@
         <div id="account-profile" style="display:none;">
             <div class="profile-card">
                 <div class="profile-header">
-                    <img id="profile-picture" src="" alt="Profile" class="profile-avatar" onerror="this.style.display='none';this.parentElement.querySelector('.profile-avatar-fallback').style.display='flex';">
-                    <div class="profile-avatar-fallback" style="display:none;width:80px;height:80px;border-radius:50%;background:var(--black);color:var(--white);align-items:center;justify-content:center;font-size:2rem;font-weight:700;">?</div>
+                    <div class="profile-avatar-wrap" style="position:relative;width:80px;height:80px;flex-shrink:0;">
+                        <img id="profile-picture" src="" alt="Profile" class="profile-avatar" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:none;" onerror="this.style.display='none';document.getElementById('profile-avatar-fallback').style.display='flex';">
+                        <div id="profile-avatar-fallback" style="display:flex;width:80px;height:80px;border-radius:50%;background:var(--black);color:var(--white);align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;text-transform:uppercase;">?</div>
+                    </div>
                     <div class="profile-info">
                         <h2 id="profile-name" class="profile-name">User</h2>
                         <p id="profile-email" class="profile-email">email@example.com</p>
@@ -85,11 +87,33 @@ function initAccount() {
     // Populate profile
     document.getElementById('profile-name').textContent = user.name || 'User';
     document.getElementById('profile-email').textContent = user.email || '';
-    document.getElementById('profile-picture').src = user.picture || '';
+
+    const pic = document.getElementById('profile-picture');
+    const fallback = document.getElementById('profile-avatar-fallback');
+    const avatarUrl = user.picture || user.avatar || '';
+    if (avatarUrl) {
+        pic.src = avatarUrl;
+        pic.style.display = 'block';
+        fallback.style.display = 'none';
+    } else {
+        pic.style.display = 'none';
+        fallback.style.display = 'flex';
+        // Set initials
+        const initials = (user.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2);
+        fallback.textContent = initials;
+    }
 
     const roleSpan = document.getElementById('profile-role');
-    roleSpan.textContent = user.role || 'user';
-    roleSpan.style.background = user.role === 'admin' ? '#c8102e' : '#007bff';
+    const role = user.role || 'user';
+    const privileged = ['admin', 'ceo', 'founder'].includes(role);
+    roleSpan.textContent = role.toUpperCase();
+    roleSpan.style.background = privileged ? '#c8102e' : '#007bff';
+    roleSpan.style.color = '#fff';
+    roleSpan.style.padding = '2px 10px';
+    roleSpan.style.borderRadius = '12px';
+    roleSpan.style.fontSize = '0.7rem';
+    roleSpan.style.fontWeight = '700';
+    roleSpan.style.letterSpacing = '0.05em';
 
     const dateEl = document.getElementById('profile-date');
     if (user.createdAt) {
@@ -100,9 +124,10 @@ function initAccount() {
     notLogged.style.display = 'none';
     profile.style.display = 'block';
 
-    // Update admin visibility
+    // Update admin visibility (privileged roles: admin, ceo, founder)
+    const isPrivileged = ['admin', 'ceo', 'founder'].includes(user.role || '');
     document.querySelectorAll('.admin-only').forEach(el => {
-        el.style.display = (user.role === 'admin') ? 'block' : 'none';
+        el.style.display = isPrivileged ? 'block' : 'none';
     });
 }
 

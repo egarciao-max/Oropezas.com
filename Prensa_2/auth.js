@@ -105,8 +105,13 @@
         const data = await res.json();
 
         if (data.success && data.user) {
-          this.currentUser = data.user;
-          this._saveUser(data.user);
+          // Add backward-compatible aliases for old account.html code
+          const user = data.user;
+          if (user.picture && !user.avatar) user.avatar = user.picture;
+          if (user.uid && !user.unionId) user.unionId = user.uid;
+
+          this.currentUser = user;
+          this._saveUser(user);
           this.closeLoginModal();
           this._updateUI();
 
@@ -323,7 +328,12 @@
         if (!raw) return null;
         const user = JSON.parse(raw);
         // Validate: must have uid and name
-        if (user && user.uid && user.name) return user;
+        if (user && user.uid && user.name) {
+          // Ensure backward-compatible aliases exist
+          if (user.picture && !user.avatar) user.avatar = user.picture;
+          if (user.uid && !user.unionId) user.unionId = user.uid;
+          return user;
+        }
       } catch (e) {
         console.warn('[AUTH] localStorage load failed:', e);
       }
