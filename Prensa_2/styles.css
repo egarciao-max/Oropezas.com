@@ -998,6 +998,9 @@ footer {
 }
 .auth-modal-terms a { color: #555; text-decoration: underline; }
 
+/* Admin-only elements */
+.admin-only { display: none; }
+
 /* ============================================================
    ACCOUNT PAGE
    ============================================================ */
