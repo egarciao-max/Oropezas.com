@@ -85,11 +85,94 @@ async function generateImageWithAI(prompt, env) {
     const response = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
       prompt: prompt,
     });
-    // response is Uint8Array
     return { bytes: response, mimeType: 'image/png' };
   } catch (e) {
     console.error('Cloudflare AI image error:', e.message);
     throw e;
+  }
+}
+
+// ─── Seed Kelowna Articles ──────────────────────────────────
+const KELOWNA_SEED_ARTICLES = [
+  {
+    id: 'kelowna-seed-1', title: 'Kelowna Residents Rally to Save Beloved Orchard from Development',
+    slug: 'kelowna-residents-rally-save-orchard',
+    excerpt: 'Hundreds of Kelowna residents have gathered signatures to save the iconic Johnson Family Orchard, a staple of the community for over five decades.',
+    html: '<p>Hundreds of Kelowna residents have gathered signatures to save the iconic Johnson Family Orchard, a staple of the community for over five decades. The orchard, located on the corner of Highway 97 and Clement Avenue, has been threatened by a proposed commercial development project.</p><h2>Community Response</h2><p>Local residents organized a peaceful demonstration last Saturday, drawing over 300 participants. "This orchard is part of our heritage," said organizer Maria Santos.</p><blockquote>"This orchard is part of our heritage. We can\'t let another piece of Kelowna\'s history disappear."</blockquote><p>The petition has already collected over 2,000 signatures and continues to grow.</p>',
+    category: 'noticias', tags: ['community', 'development', 'heritage'],
+    featured: true, status: 'published', author: 'Kelowna News Team',
+    site: 'kelowna', date: '2026-05-02', folder: 'noticias',
+    featuredImage: '/LOGO.jpeg', image: '/LOGO.jpeg',
+  },
+  {
+    id: 'kelowna-seed-2', title: 'Okanagan Lake Water Levels Rise After Spring Melt',
+    slug: 'okanagan-lake-water-levels-rise',
+    excerpt: 'Recent warm weather has caused rapid snowmelt in the surrounding mountains, leading to rising water levels in Okanagan Lake.',
+    html: '<p>Recent warm weather has caused rapid snowmelt in the surrounding mountains, leading to rising water levels in Okanagan Lake. The Central Okanagan Regional District has issued safety warnings for shoreline areas.</p><h2>Safety Precautions</h2><p>Residents are advised to secure boats and docks, and avoid low-lying shoreline areas during peak times.</p><p>"We monitor the situation closely," said regional district spokesperson Tom Williams.</p>',
+    category: 'noticias', tags: ['environment', 'safety'],
+    status: 'published', author: 'Kelowna News Team',
+    site: 'kelowna', date: '2026-05-01', folder: 'noticias',
+    featuredImage: '/LOGO.jpeg', image: '/LOGO.jpeg',
+  },
+  {
+    id: 'kelowna-seed-3', title: 'New Tech Hub Opens in Downtown Kelowna, Promising 200 Jobs',
+    slug: 'new-tech-hub-downtown-kelowna',
+    excerpt: 'A new technology innovation hub officially opened its doors in downtown Kelowna this week, bringing with it the promise of up to 200 high-paying jobs.',
+    html: '<p>A new technology innovation hub officially opened its doors in downtown Kelowna this week, bringing with it the promise of up to 200 high-paying jobs over the next three years. The Okanagan Innovation Centre, located on Bernard Avenue, spans 45,000 square feet.</p><h2>Economic Impact</h2><p>Mayor Tom Dyas was present at the ribbon-cutting ceremony. "This is a significant milestone for Kelowna\'s growing tech sector," Dyas said.</p><p>The centre will house 15-20 startups and established companies, with shared amenities including conference facilities, a prototyping lab, and co-working spaces.</p>',
+    category: 'tecnologia', tags: ['technology', 'jobs', 'economy'],
+    status: 'published', author: 'Tech Reporter',
+    site: 'kelowna', date: '2026-04-30', folder: 'noticias',
+    featuredImage: '/LOGO.jpeg', image: '/LOGO.jpeg',
+  },
+  {
+    id: 'kelowna-seed-4', title: 'Summer Festival Season Kicks Off in the Okanagan',
+    slug: 'summer-festival-season-okanagan',
+    excerpt: 'The Okanagan Valley is gearing up for another spectacular summer festival season, with over 40 major events scheduled between May and September.',
+    html: '<p>The Okanagan Valley is gearing up for another spectacular summer festival season, with over 40 major events scheduled between May and September. From wine tastings to music festivals, there\'s something for everyone.</p><h2>Notable Events</h2><ul><li><strong>May 15-18:</strong> Okanagan Wine Festival - Over 100 wineries participating</li><li><strong>June 20-22:</strong> Centre of Gravity Music Festival</li><li><strong>July 4-6:</strong> Kelowna Folk Festival - Three days of folk and roots music</li><li><strong>August 15-17:</strong> Peachland Arts & Crafts Fair</li></ul>',
+    category: 'noticias', tags: ['events', 'summer', 'tourism'],
+    status: 'published', author: 'Events Coordinator',
+    site: 'kelowna', date: '2026-04-28', folder: 'noticias',
+    featuredImage: '/LOGO.jpeg', image: '/LOGO.jpeg',
+  },
+  {
+    id: 'kelowna-seed-5', title: 'Kelowna Rockets Advance to WHL Conference Finals',
+    slug: 'kelowna-rockets-conference-finals',
+    excerpt: 'The Kelowna Rockets punched their ticket to the WHL Western Conference Finals with a thrilling 3-2 overtime victory against the Victoria Royals.',
+    html: '<p>The Kelowna Rockets punched their ticket to the WHL Western Conference Finals with a thrilling 3-2 overtime victory against the Victoria Royals last night at Prospera Place. Forward Jake Mitchell scored the game-winner just 2:14 into the extra period.</p><h2>Game Highlights</h2><p>The Rockets fell behind early, trailing 2-0 after the first period. Coach Kris Mallette\'s halftime adjustments proved crucial as Kelowna stormed back.</p><blockquote>"These guys never quit. Down two goals, they kept battling. That\'s the character of this team."</blockquote><p>The Rockets will face the Kamloops Blazers in the conference finals, with Game 1 scheduled for Friday night.</p>',
+    category: 'deportes', tags: ['sports', 'hockey', 'playoffs'],
+    status: 'published', author: 'Sports Desk',
+    site: 'kelowna', date: '2026-04-27', folder: 'noticias',
+    featuredImage: '/LOGO.jpeg', image: '/LOGO.jpeg',
+  },
+  {
+    id: 'kelowna-seed-6', title: 'Local Brewery Wins National Craft Beer Award',
+    slug: 'local-brewery-national-award',
+    excerpt: 'Kelowna\'s own BNA Brewing Company has won gold at the prestigious Canadian Brewing Awards for their signature Nucklehead IPA.',
+    html: '<p>Kelowna\'s own BNA Brewing Company has won gold at the prestigious Canadian Brewing Awards for their signature Nucklehead IPA. The competition, held in Toronto, featured over 250 breweries from across Canada.</p><h2>A Recognition of Quality</h2><p>BNA founder Dave McAnerin expressed his excitement: "This award is a testament to our team\'s dedication to craft and quality."</p><p>The Nucklehead IPA, named after a local hiking trail, features notes of citrus and pine with a balanced bitterness that has made it a local favorite.</p>',
+    category: 'noticias', tags: ['food', 'local', 'awards'],
+    status: 'published', author: 'Lifestyle Editor',
+    site: 'kelowna', date: '2026-04-25', folder: 'noticias',
+    featuredImage: '/LOGO.jpeg', image: '/LOGO.jpeg',
+  },
+];
+
+async function seedKelownaArticles(env) {
+  try {
+    const existing = await env.OROPEZAS_KV.get('kelowna_articles_index');
+    if (existing) return; // already seeded
+
+    for (const article of KELOWNA_SEED_ARTICLES) {
+      await env.OROPEZAS_KV.put(`article:${article.id}`, JSON.stringify(article));
+    }
+
+    await env.OROPEZAS_KV.put('kelowna_articles_index', JSON.stringify({
+      articles: KELOWNA_SEED_ARTICLES,
+      lastUpdated: new Date().toISOString(),
+    }));
+
+    console.log('Kelowna seed articles created');
+  } catch (e) {
+    console.error('Error seeding Kelowna articles:', e);
   }
 }
 
@@ -528,6 +611,9 @@ async function resolverImagenArticulo(article, env, { slug, category }) {
 
 export default {
   async fetch(request, env, ctx) {
+    // Seed Kelowna articles on first request
+    await seedKelownaArticles(env);
+
     const url = new URL(request.url);
     const origin = request.headers.get('Origin');
     const corsHeaders = getCorsHeaders(origin);
@@ -1152,15 +1238,19 @@ async function handleGetArticles(request, env, corsHeaders) {
     const featured = url.searchParams.get('featured');
     const site = url.searchParams.get('site');
 
-    // Filter by site - show only articles matching the requested site
-    // Articles without a site field default to 'oropezas' (backwards compat)
-    // If site filter returns no results, fall back to showing all articles
-    if (site) {
-      const filtered = articles.filter(a => (a.site || 'oropezas') === site);
-      if (filtered.length > 0) {
-        articles = filtered;
+    // Filter by site - Kelowna reads from its own index
+    if (site === 'kelowna') {
+      try {
+        const kelownaData = await env.OROPEZAS_KV.get('kelowna_articles_index');
+        if (kelownaData) {
+          const parsed = JSON.parse(kelownaData);
+          articles = parsed.articles || [];
+        } else {
+          articles = [];
+        }
+      } catch {
+        articles = [];
       }
-      // else: keep all articles as fallback until site-specific content exists
     }
 
     if (slug) {
