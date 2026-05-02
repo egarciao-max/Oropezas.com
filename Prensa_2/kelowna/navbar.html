@@ -1,0 +1,42 @@
+<div class="header-container">
+    <a href="/kelowna/index.html" class="logo">
+        <img src="../LOGO.jpeg" alt="Kelowna.Oropezas.com">
+    </a>
+
+    <div style="text-align:center; margin-bottom:1rem;">
+        <p style="font-size:0.75rem; letter-spacing:0.1em; color:var(--gray-text); text-transform:uppercase; font-weight:500;">
+            Acting CEO of Kelowna: <strong style="color:var(--black);">Marty Strikwerda</strong>
+        </p>
+    </div>
+
+    <nav>
+        <a href="/kelowna/index.html">Home</a>
+        <a href="/kelowna/noticias.html">News</a>
+        <a href="/kelowna/contacto.html">Contact</a>
+        <a href="https://oropezas.com" style="background:#c8102e;color:#fff;padding:0.35rem 0.8rem;border-radius:4px;font-size:0.8rem;">🇲🇽 Oropezas</a>
+    </nav>
+
+    <!-- AUTH CONTROLS -->
+    <div class="auth-nav-controls">
+        <button class="lang-toggle-btn" onclick="window.i18n && window.i18n.toggle()" title="Switch language"
+          style="background:none;border:1px solid #ddd;border-radius:4px;padding:4px 10px;font-size:.78rem;cursor:pointer;font-weight:600;letter-spacing:.03em;color:#333;">EN</button>
+        <button id="auth-login-btn" class="auth-login-btn" onclick="OROPEZAS_AUTH.openLoginModal()" style="display:flex;" aria-label="Sign in">
+            <i class="bi bi-person"></i>
+            <span class="auth-login-label">Sign In</span>
+        </button>
+        <div id="auth-user-avatar" class="auth-user-avatar" onclick="OROPEZAS_AUTH.toggleUserMenu()" style="display:none;" aria-label="My account">
+            <img id="auth-user-picture" src="" alt="Profile" class="auth-avatar-img">
+            <span id="auth-user-name" class="auth-user-name-label"></span>
+            <i class="bi bi-chevron-down auth-chevron"></i>
+        </div>
+        <div id="auth-user-menu" class="auth-user-menu">
+            <a href="/kelowna/account.html" class="auth-menu-item">
+                <i class="bi bi-person-circle"></i> My Account
+            </a>
+            <hr class="auth-menu-divider">
+            <button class="auth-menu-item auth-menu-logout" onclick="OROPEZAS_AUTH.logout()">
+                <i class="bi bi-box-arrow-right"></i> Sign Out
+            </button>
+        </div>
+    </div>
+</div>

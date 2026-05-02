@@ -9,119 +9,148 @@
 </head>
 <body data-page="index" data-site="kelowna">
 
-    <header>
-        <div class="header-container" style="text-align:center;">
-            <a href="/kelowna/" class="logo" style="display:flex;align-items:center;justify-content:center;gap:0.75rem;text-decoration:none;margin-bottom:0.5rem;">
-                <img src="../LOGO.jpeg" alt="Oropezas" style="height:36px;width:auto;border-radius:4px;">
-                <span style="font-size:1.3rem; letter-spacing:0.08em; color:var(--black);">KELOWNA<span style="color:#c8102e;">.OROPEZAS</span></span>
-            </a>
-            <p class="tagline">Local news from Kelowna, BC, Canada</p>
-            <nav style="border-top:1px solid var(--gray-border); padding-top:1rem;">
-                <a href="/kelowna/">Home</a>
-                <a href="/kelowna/noticias.html">News</a>
-                <a href="/kelowna/contacto.html">Contact</a>
-                <a href="https://oropezas.com" style="background:var(--black);color:var(--white);padding:0.35rem 0.8rem;border-radius:4px;font-size:0.8rem;">🇲🇽 Oropezas (Mexico)</a>
-            </nav>
-        </div>
-    </header>
+    <header></header>
 
     <main>
+        <!-- FEATURED ARTICLE (dinámico) -->
         <section class="featured-section">
-            <div id="featured-container">
-            </div>
+            <div id="featured-container"></div>
         </section>
 
+        <!-- LATEST NEWS (dinámico) -->
         <section class="latest-section">
             <h2 class="section-title">Latest News</h2>
-            <div id="articles-grid" class="news-grid">
-            </div>
+            <div id="articles-grid" class="news-grid"></div>
         </section>
     </main>
 
-    <footer>
-        <div class="footer-container">
-            <div class="footer-section">
-                <h3>Kelowna.Oropezas</h3>
-                <p>Local news from Kelowna, BC, Canada. Keeping our community informed.</p>
-            </div>
-            <div class="footer-section">
-                <h3>Quick Links</h3>
-                <div class="footer-links">
-                    <a href="/kelowna/">Home</a>
-                    <a href="/kelowna/noticias.html">All Articles</a>
-                    <a href="/kelowna/contacto.html">Contact</a>
-                </div>
-            </div>
-            <div class="footer-section">
-                <h3>Connect</h3>
-                <p>Got a story tip? Reach out through our contact page.</p>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2026 Kelowna.Oropezas.com</p>
-            <div class="footer-links" style="flex-direction:row; gap:1.5rem;">
-                <a href="/kelowna/noticias.html">All Articles</a>
-                <a href="/kelowna/contacto.html">Contact</a>
-            </div>
-        </div>
-    </footer>
+    <footer></footer>
 
-    <style>
-    #chat-bot-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #000;
-      color: white;
-      border: none;
-      border-radius: 50px;
-      padding: 12px 16px;
-      cursor: pointer;
-      z-index: 9999;
-    }
-    #chat-window {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      width: 360px;
-      max-width: 92vw;
-      height: 520px;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-      font-family: system-ui;
-    }
-    .chat-header { background: #000; color: white; padding: 14px; font-weight: 600; display: flex; justify-content: space-between; }
-    .chat-messages { flex: 1; overflow-y: auto; padding: 14px; background: #fafafa; }
-    .msg { margin: 8px 0; max-width: 80%; padding: 12px 14px; border-radius: 16px; line-height: 1.4; animation: fade 0.2s ease; }
-    .user { background: #000; color: white; margin-left: auto; }
-    .bot { background: #e9e9e9; color: #111; }
-    .chat-input { border-top: 1px solid #eee; display: flex; align-items: flex-end; padding: 8px; }
-    .chat-input textarea { flex: 1; resize: none; border: none; outline: none; font-size: 16px; max-height: 100px; padding: 8px; }
-    .chat-input button { background: #000; color: white; border: none; padding: 10px; cursor: pointer; border-radius: 10px; }
-    .typing { display: flex; gap: 4px; }
-    .typing span { width: 6px; height: 6px; background: #888; border-radius: 50%; animation: bounce 1.2s infinite; }
-    .typing span:nth-child(2){animation-delay:0.2s;}
-    .typing span:nth-child(3){animation-delay:0.4s;}
-    @keyframes bounce { 0%,80%,100%{transform:scale(0);} 40%{transform:scale(1);} }
-    @keyframes fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
-    .msg strong {font-weight:700;} .msg em {font-style:italic;} .msg a {color:#007aff; text-decoration:none;} .msg ul {padding-left:18px;}
-    </style>
+<!-- ========== KELOWNA AI CHAT ========= -->
+<style>
+#chat-bot-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #000;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 16px;
+  cursor: pointer;
+  z-index: 9999;
+}
+#chat-window {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 360px;
+  max-width: 92vw;
+  height: 520px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: system-ui;
+}
+.chat-header {
+  background: #000;
+  color: white;
+  padding: 14px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+}
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  background: #fafafa;
+}
+.msg {
+  margin: 8px 0;
+  max-width: 80%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  line-height: 1.4;
+  animation: fade 0.2s ease;
+}
+.user {
+  background: #000;
+  color: white;
+  margin-left: auto;
+}
+.bot {
+  background: #e9e9e9;
+  color: #111;
+}
+.chat-input {
+  border-top: 1px solid #eee;
+  display: flex;
+  align-items: flex-end;
+  padding: 8px;
+}
+.chat-input textarea {
+  flex: 1;
+  resize: none;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  max-height: 100px;
+  padding: 8px;
+}
+.chat-input button {
+  background: #000;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+.typing {
+  display: flex;
+  gap: 4px;
+}
+.typing span {
+  width: 6px;
+  height: 6px;
+  background: #888;
+  border-radius: 50%;
+  animation: bounce 1.2s infinite;
+}
+.typing span:nth-child(2){animation-delay:0.2s;}
+.typing span:nth-child(3){animation-delay:0.4s;}
+@keyframes bounce {
+  0%,80%,100%{transform:scale(0);}
+  40%{transform:scale(1);}
+}
+@keyframes fade {
+  from{opacity:0; transform:translateY(8px);}
+  to{opacity:1; transform:translateY(0);}
+}
+.msg strong {font-weight:700;}
+.msg em {font-style:italic;}
+.msg a {color:#007aff; text-decoration:none;}
+.msg ul {padding-left:18px;}
+</style>
 
-    <button id="chat-bot-btn"><i class="bi bi-chat-dots"></i></button>
-    <div id="chat-window">
-      <div class="chat-header">Kelowna AI <span id="close" style="cursor:pointer">✕</span></div>
-      <div class="chat-messages" id="messages">
-        <div class="msg bot">Hi! I'm your Kelowna news assistant. Ask me anything about local news.</div>
-      </div>
-      <div class="chat-input">
-        <textarea id="input" rows="1" placeholder="Type a message..."></textarea>
-        <button id="send">➤</button>
-      </div>
-    </div>
+<button id="chat-bot-btn"><i class="bi bi-chat-dots"></i></button>
+
+<div id="chat-window">
+  <div class="chat-header">
+    Kelowna AI
+    <span id="close" style="cursor:pointer">✕</span>
+  </div>
+  <div class="chat-messages" id="messages">
+    <div class="msg bot">Hi 👋 I'm your Kelowna news assistant. Ask me anything.</div>
+  </div>
+  <div class="chat-input">
+    <textarea id="input" rows="1" placeholder="Type a message..."></textarea>
+    <button id="send">➤</button>
+  </div>
+</div>
 
 <script>
 const API = "https://oropezas.enriquegarciaoropeza.workers.dev";
@@ -152,7 +181,11 @@ input.addEventListener("keydown", e => {
 });
 
 function md(text){
-  return text.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\*(.*?)\*/g,"<em>$1</em>").replace(/\[(.*?)\]\((.*?)\)/g,'<a href="$2" target="_blank">$1</a>').replace(/\n/g,"<br>");
+  return text
+    .replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g,"<em>$1</em>")
+    .replace(/\[(.*?)\]\((.*?)\)/g,'<a href="$2" target="_blank">$1</a>')
+    .replace(/\n/g,"<br>");
 }
 
 function add(text,type){
@@ -194,7 +227,7 @@ async function sendMessage(text){
     smartType(data.reply || "I can help you with something related to Kelowna.Oropezas.com");
   }catch{
     removeLoader();
-    add("Connection error. Please try again.","bot");
+    add("Connection error.","bot");
   }
 }
 
@@ -217,67 +250,71 @@ function smartType(text){
 send.onclick = () => sendMessage(input.value);
 </script>
 
+<script src="main.js"></script>
+<script src="news-loader.js"></script>
+<script src="../auth.js"></script>
+
 <script>
-(async function loadKelownaNews() {
-  try {
-    const res = await fetch(API + '/api/articles?site=kelowna');
-    const data = await res.json();
-    const articles = data.articles || [];
+// Kelowna news loader with site filter
+(function loadKelownaNews() {
+  fetch(API + '/api/articles?site=kelowna')
+    .then(r => r.json())
+    .then(data => {
+      const articles = data.articles || [];
+      const featuredContainer = document.getElementById('featured-container');
+      const articlesGrid = document.getElementById('articles-grid');
 
-    const featuredContainer = document.getElementById('featured-container');
-    const articlesGrid = document.getElementById('articles-grid');
-
-    if (articles.length > 0 && featuredContainer) {
-      const featured = articles[0];
-      featuredContainer.innerHTML = `
-        <div class="featured-article">
-          <div class="featured-image" style="cursor:pointer;" onclick="location.href='article.html?slug=${featured.slug}'">
-            <img src="${featured.image || '../LOGO.jpeg'}" alt="${featured.title}" style="width:100%;height:100%;object-fit:cover;"
-              onerror="this.style.display='none';this.parentElement.style.background='var(--gray-light)';this.parentElement.innerHTML='<span style=\\'font-size:2rem;color:var(--gray-text);\\'>📰</span>';">
-          </div>
-          <div class="featured-content">
-            <span class="news-tag">${featured.category || 'News'}</span>
-            <h1>${featured.title}</h1>
-            <p class="subtitle">${featured.excerpt || featured.subtitle || ''}</p>
-            <div class="article-meta">
-              <span>${featured.date || ''}</span>
-              <span>${featured.author || 'Kelowna News'}</span>
+      if (articles.length > 0 && featuredContainer) {
+        const a = articles[0];
+        featuredContainer.innerHTML = `
+          <div class="featured-article">
+            <div class="featured-image" style="cursor:pointer;" onclick="location.href='article.html?slug=${a.slug}'">
+              <img src="${a.image || '../LOGO.jpeg'}" alt="${a.title}" style="width:100%;height:100%;object-fit:cover;"
+                onerror="this.style.display='none';this.parentElement.style.background='var(--gray-light)';this.parentElement.innerHTML='<span style=font-size:3rem;color:var(--gray-text);>📰</span>';">
             </div>
-            <a href="article.html?slug=${featured.slug}" class="read-more">Read more →</a>
-          </div>
-        </div>`;
-    }
-
-    if (articlesGrid) {
-      const gridArticles = articles.slice(1, 7);
-      if (gridArticles.length === 0) {
-        articlesGrid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--gray-text);padding:3rem;">No articles yet. Check back soon!</p>';
+            <div class="featured-content">
+              <span class="news-tag">${a.category || 'News'}</span>
+              <h1>${a.title}</h1>
+              <p class="subtitle">${a.excerpt || a.subtitle || ''}</p>
+              <div class="article-meta">
+                <span>${a.date || ''}</span>
+                <span>${a.author || 'Kelowna News'}</span>
+              </div>
+              <a href="article.html?slug=${a.slug}" class="read-more">Read more →</a>
+            </div>
+          </div>`;
       }
-      gridArticles.forEach(article => {
-        const card = document.createElement('div');
-        card.className = 'news-card';
-        card.style.cursor = 'pointer';
-        card.onclick = () => location.href = `article.html?slug=${article.slug}`;
-        card.innerHTML = `
-          <div class="news-card-image">
-            <img src="${article.image || '../LOGO.jpeg'}" alt="${article.title}" style="width:100%;height:100%;object-fit:cover;"
-              onerror="this.style.display='none';this.parentElement.style.background='var(--gray-light)';this.parentElement.innerHTML='<span style=\\'font-size:2.5rem;color:var(--gray-text);\\'>📰</span>';">
-          </div>
-          <span class="news-tag" style="font-size:0.75rem;">${article.category || 'News'}</span>
-          <h3>${article.title}</h3>
-          <p class="news-card-excerpt">${article.excerpt || ''}</p>
-          <span class="news-card-date">${article.date || ''}</span>`;
-        articlesGrid.appendChild(card);
-      });
-    }
-  } catch (e) {
-    console.error('Error loading news:', e);
-    if (articlesGrid) {
-      articlesGrid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--gray-text);padding:3rem;">Unable to load articles. Please try again later.</p>';
-    }
-  }
+
+      if (articlesGrid) {
+        const gridArticles = articles.slice(1, 7);
+        if (gridArticles.length === 0) {
+          articlesGrid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--gray-text);padding:3rem;">No articles yet. Check back soon!</p>';
+        }
+        gridArticles.forEach(a => {
+          const card = document.createElement('div');
+          card.className = 'news-card';
+          card.style.cursor = 'pointer';
+          card.onclick = () => location.href = 'article.html?slug=' + a.slug;
+          card.innerHTML = `
+            <div class="news-card-image">
+              <img src="${a.image || '../LOGO.jpeg'}" alt="${a.title}" style="width:100%;height:100%;object-fit:cover;"
+                onerror="this.style.display='none';this.parentElement.style.background='var(--gray-light)';this.parentElement.innerHTML='<span style=font-size:2.5rem;color:var(--gray-text);>📰</span>';">
+            </div>
+            <h3>${a.title}</h3>
+            <p class="news-card-excerpt">${a.excerpt || ''}</p>
+            <span class="news-card-date">${a.date || ''}</span>
+            <span class="news-card-link">Read more →</span>`;
+          articlesGrid.appendChild(card);
+        });
+      }
+    })
+    .catch(err => {
+      console.error('Error loading news:', err);
+      const g = document.getElementById('articles-grid');
+      if (g) g.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--gray-text);padding:3rem;">Unable to load articles.</p>';
+    });
 })();
 </script>
-<script src="../auth.js"></script>
+
 </body>
 </html>

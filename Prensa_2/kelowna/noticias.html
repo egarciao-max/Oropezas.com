@@ -9,21 +9,7 @@
 </head>
 <body data-page="noticias" data-site="kelowna">
 
-<header>
-  <div class="header-container" style="text-align:center;">
-    <a href="/kelowna/" class="logo" style="display:flex;align-items:center;justify-content:center;gap:0.75rem;text-decoration:none;margin-bottom:0.5rem;">
-      <img src="../LOGO.jpeg" alt="Oropezas" style="height:36px;width:auto;border-radius:4px;">
-      <span style="font-size:1.3rem; letter-spacing:0.08em; color:var(--black);">KELOWNA<span style="color:#c8102e;">.OROPEZAS</span></span>
-    </a>
-    <p class="tagline">Local news from Kelowna, BC, Canada</p>
-    <nav style="border-top:1px solid var(--gray-border); padding-top:1rem;">
-      <a href="/kelowna/">Home</a>
-      <a href="/kelowna/noticias.html">News</a>
-      <a href="/kelowna/contacto.html">Contact</a>
-      <a href="https://oropezas.com" style="background:var(--black);color:var(--white);padding:0.35rem 0.8rem;border-radius:4px;font-size:0.8rem;">🇲🇽 Oropezas (Mexico)</a>
-    </nav>
-  </div>
-</header>
+<header></header>
 
 <main>
   <h1 class="page-title">All Articles</h1>
@@ -31,29 +17,7 @@
   <div class="articles-grid" id="articles-grid"></div>
 </main>
 
-<footer>
-  <div class="footer-container">
-    <div class="footer-section">
-      <h3>Kelowna.Oropezas</h3>
-      <p>Local news from Kelowna, BC, Canada.</p>
-    </div>
-    <div class="footer-section">
-      <h3>Quick Links</h3>
-      <div class="footer-links">
-        <a href="/kelowna/">Home</a>
-        <a href="/kelowna/noticias.html">All Articles</a>
-        <a href="/kelowna/contacto.html">Contact</a>
-      </div>
-    </div>
-    <div class="footer-section">
-      <h3>Connect</h3>
-      <p>Got a story tip? Reach out through our contact page.</p>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>&copy; 2026 Kelowna.Oropezas.com</p>
-  </div>
-</footer>
+<footer></footer>
 
 <style>
 #chat-bot-btn { position: fixed; bottom: 20px; right: 20px; background: #000; color: white; border: none; border-radius: 50px; padding: 12px 16px; cursor: pointer; z-index: 9999; }
@@ -75,7 +39,7 @@
 <button id="chat-bot-btn"><i class="bi bi-chat-dots"></i></button>
 <div id="chat-window">
   <div class="chat-header">Kelowna AI <span id="close" style="cursor:pointer">✕</span></div>
-  <div class="chat-messages" id="messages"><div class="msg bot">Hi! I'm your Kelowna news assistant. Ask me anything about local news.</div></div>
+  <div class="chat-messages" id="messages"><div class="msg bot">Hi 👋 I'm your Kelowna news assistant. Ask me anything.</div></div>
   <div class="chat-input">
     <textarea id="input" rows="1" placeholder="Type a message..."></textarea>
     <button id="send">➤</button>
@@ -103,41 +67,42 @@ async function sendMessage(text){ if(!text.trim()) return; add(text,"user"); inp
 function type(text){ const d=document.createElement("div"); d.className="msg bot"; messages.appendChild(d); let i=0; function c(){ if(i<text.length){ d.innerHTML=md(text.slice(0,i)); i+=3; messages.scrollTop=messages.scrollHeight; setTimeout(c,15); } } c(); }
 send.onclick = () => sendMessage(input.value);
 
-(async function loadNews() {
-  try {
-    const res = await fetch(API + '/api/articles?site=kelowna');
-    const data = await res.json();
+// Load news with site filter
+fetch(API + '/api/articles?site=kelowna')
+  .then(r => r.json())
+  .then(data => {
     const articles = data.articles || [];
     const grid = document.getElementById('articles-grid');
-
     if (articles.length === 0) {
       grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--gray-text);padding:3rem;">No articles yet. Check back soon!</p>';
       return;
     }
-
-    articles.forEach(article => {
+    articles.forEach(a => {
       const card = document.createElement('div');
       card.className = 'article-card';
       card.style.cursor = 'pointer';
-      card.onclick = () => location.href = 'article.html?slug=' + article.slug;
+      card.onclick = () => location.href = 'article.html?slug=' + a.slug;
       card.innerHTML = `
         <div class="article-card-image">
-          <img src="${article.image || '../LOGO.jpeg'}" alt="${article.title}" style="width:100%;height:100%;object-fit:cover;"
+          <img src="${a.image || '../LOGO.jpeg'}" alt="${a.title}" style="width:100%;height:100%;object-fit:cover;"
             onerror="this.style.display='none';this.parentElement.style.background='var(--gray-light)';this.parentElement.innerHTML='<span style=font-size:2.5rem;color:var(--gray-text);>📰</span>';">
         </div>
-        <span class="article-card-category">${article.category || 'News'}</span>
-        <h3>${article.title}</h3>
-        <p class="article-card-excerpt">${article.excerpt || ''}</p>
-        <span class="article-card-date">${article.date || ''}</span>
+        <span class="article-card-category">${a.category || 'News'}</span>
+        <h3>${a.title}</h3>
+        <p class="article-card-excerpt">${a.excerpt || ''}</p>
+        <span class="article-card-date">${a.date || ''}</span>
         <span class="article-card-link">Read more →</span>`;
       grid.appendChild(card);
     });
-  } catch (e) {
-    console.error('Error:', e);
+  })
+  .catch(err => {
+    console.error('Error:', err);
     document.getElementById('articles-grid').innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--gray-text);padding:3rem;">Unable to load articles.</p>';
-  }
-})();
+  });
 </script>
+
+<script src="main.js"></script>
 <script src="../auth.js"></script>
+
 </body>
 </html>
