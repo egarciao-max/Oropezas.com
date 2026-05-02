@@ -22,12 +22,8 @@
       // Load cached user
       this.currentUser = this._loadUser();
 
-      // Setup GSI library when ready
-      if (window.google?.accounts?.id) {
-        this._setupGSI();
-      } else {
-        window.addEventListener('gsi-ready', () => this._setupGSI(), { once: true });
-      }
+      // Load Google Identity Services script dynamically
+      this._loadGSIScript();
 
       // Watch for navbar being loaded dynamically (Kelowna)
       this._watchNavbarDynamic();
@@ -39,6 +35,40 @@
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') this.closeLoginModal();
       });
+    },
+
+    // ─── Load Google Identity Services Script ─────────────
+    _loadGSIScript() {
+      if (window.google?.accounts?.id) {
+        this._setupGSI();
+        return;
+      }
+
+      // Check if script is already loading
+      if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
+        // Wait for it to load
+        const check = setInterval(() => {
+          if (window.google?.accounts?.id) {
+            clearInterval(check);
+            this._setupGSI();
+          }
+        }, 100);
+        setTimeout(() => clearInterval(check), 5000); // Give up after 5s
+        return;
+      }
+
+      // Create and load script
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        this._setupGSI();
+      };
+      script.onerror = () => {
+        console.error('[AUTH] Failed to load Google Identity Services');
+      };
+      document.head.appendChild(script);
     },
 
     // ─── Google Sign-In Setup ───────────────────────────────
@@ -61,19 +91,33 @@
     },
 
     // ─── Try to render GSI button ─────────────────────────
-    _tryRenderGSIButton() {
+    _tryRenderGSIButton(attempts = 0) {
       const btn = document.getElementById('google-signin-btn');
-      if (btn && window.google?.accounts?.id) {
-        google.accounts.id.renderButton(btn, {
-          theme: 'outline',
-          size:  'large',
-          width: 280,
-          text:  'continue_with',
-          shape: 'rectangular',
-        });
-        return true;
+      if (!btn) {
+        if (attempts < 5) {
+          setTimeout(() => this._tryRenderGSIButton(attempts + 1), 200);
+        }
+        return false;
       }
-      return false;
+      if (!window.google?.accounts?.id) {
+        if (attempts < 10) {
+          setTimeout(() => this._tryRenderGSIButton(attempts + 1), 300);
+        }
+        return false;
+      }
+
+      // Clear previous content
+      btn.innerHTML = '';
+
+      google.accounts.id.renderButton(btn, {
+        theme: 'outline',
+        size:  'large',
+        width: 280,
+        text:  'continue_with',
+        shape: 'rectangular',
+      });
+
+      return true;
     },
 
     // ─── Handle Google Credential ─────────────────────────
