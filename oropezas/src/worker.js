@@ -1154,8 +1154,13 @@ async function handleGetArticles(request, env, corsHeaders) {
 
     // Filter by site - show only articles matching the requested site
     // Articles without a site field default to 'oropezas' (backwards compat)
+    // If site filter returns no results, fall back to showing all articles
     if (site) {
-      articles = articles.filter(a => (a.site || 'oropezas') === site);
+      const filtered = articles.filter(a => (a.site || 'oropezas') === site);
+      if (filtered.length > 0) {
+        articles = filtered;
+      }
+      // else: keep all articles as fallback until site-specific content exists
     }
 
     if (slug) {

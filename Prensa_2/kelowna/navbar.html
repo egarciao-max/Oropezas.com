@@ -1,6 +1,6 @@
 <div class="header-container">
     <a href="/kelowna/index.html" class="logo">
-        <img src="../LOGO.jpeg" alt="Kelowna.Oropezas.com">
+        <img src="/LOGO.jpeg" alt="Kelowna.Oropezas.com" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:1.3rem;font-weight:900;letter-spacing:0.08em;>KELOWNA<span style=color:#c8102e;>.OROPEZAS</span></span>';">
     </a>
 
     <nav>
@@ -14,12 +14,12 @@
     <div class="auth-nav-controls">
         <button class="lang-toggle-btn" onclick="window.i18n && window.i18n.toggle()" title="Switch language"
           style="background:none;border:1px solid #ddd;border-radius:4px;padding:4px 10px;font-size:.78rem;cursor:pointer;font-weight:600;letter-spacing:.03em;color:#333;">EN</button>
-        <button id="auth-login-btn" class="auth-login-btn" onclick="OROPEZAS_AUTH.openLoginModal()" style="display:flex;" aria-label="Sign in">
+        <button id="auth-login-btn" class="auth-login-btn" onclick="OROPEZAS_AUTH.openLoginModal()" style="display:none;" aria-label="Sign in">
             <i class="bi bi-person"></i>
             <span class="auth-login-label">Sign In</span>
         </button>
         <div id="auth-user-avatar" class="auth-user-avatar" onclick="OROPEZAS_AUTH.toggleUserMenu()" style="display:none;" aria-label="My account">
-            <img id="auth-user-picture" src="" alt="Profile" class="auth-avatar-img">
+            <img id="auth-user-picture" src="" alt="Profile" class="auth-avatar-img" style="display:none;">
             <span id="auth-user-name" class="auth-user-name-label"></span>
             <i class="bi bi-chevron-down auth-chevron"></i>
         </div>
