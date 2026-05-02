@@ -77,7 +77,7 @@
 
       // Initialize with your Google Client ID
       google.accounts.id.initialize({
-        client_id: '233406003665-udr6c9vv4jej9ur8bsa22tdr9edouvfl.apps.googleusercontent.com',
+        client_id: '233406003665-phh7pcmg6gr23fdlsfjb5db90avi9vrb.apps.googleusercontent.com',
         callback: (response) => this._handleGoogleCredential(response),
         auto_select: false,
         cancel_on_tap_outside: true,
