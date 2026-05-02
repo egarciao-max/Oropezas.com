@@ -92,59 +92,6 @@
       // DO NOT auto-prompt — user must click Sign In
     },
 
-    // ─── Try to render GSI button ─────────────────────────
-    _tryRenderGSIButton(attempts = 0) {
-      const btn = document.getElementById('google-signin-btn');
-      const fallback = document.getElementById('gsi-fallback-btn');
-
-      if (!btn) {
-        if (attempts < 5) {
-          setTimeout(() => this._tryRenderGSIButton(attempts + 1), 200);
-        }
-        return false;
-      }
-
-      // Always show fallback by default — hide only if GSI renders successfully
-      if (fallback) fallback.style.display = 'flex';
-
-      if (!window.google?.accounts?.id) {
-        // GSI not loaded yet — keep fallback visible, retry
-        if (attempts < 15) {
-          setTimeout(() => this._tryRenderGSIButton(attempts + 1), 300);
-        }
-        return false;
-      }
-
-      // GSI loaded — try to render real button
-      btn.innerHTML = '';
-
-      try {
-        google.accounts.id.renderButton(btn, {
-          theme: 'outline',
-          size:  'large',
-          width: 280,
-          text:  'continue_with',
-          shape: 'rectangular',
-        });
-
-        // Check if button actually appeared after a short delay
-        setTimeout(() => {
-          const hasContent = btn.children.length > 0 || btn.innerHTML.length > 50;
-          if (hasContent && fallback) {
-            // Real button rendered — hide fallback
-            fallback.style.display = 'none';
-          }
-          // If no content, fallback stays visible
-        }, 500);
-
-        return true;
-      } catch (e) {
-        console.error('[AUTH] renderButton failed:', e);
-        // Fallback already visible
-        return false;
-      }
-    },
-
     // ─── Trigger Google sign-in via one-tap prompt ──────────
     _triggerGSISignIn() {
       if (!window.google?.accounts?.id) {
@@ -259,10 +206,12 @@
           <div style="background:#fee;color:#c00;padding:0.75rem 1rem;border-radius:4px;margin-bottom:1rem;font-size:0.85rem;">
             ⚠️ ${msg}
           </div>
-          <div id="google-signin-btn" style="display:flex;justify-content:center;"></div>
+          <button class="gsi-custom-btn" onclick="OROPEZAS_AUTH._triggerGSISignIn()" style="display:flex;width:100%;padding:12px 16px;background:#fff;border:1px solid #dadce0;border-radius:4px;color:#3c4043;font-size:14px;font-weight:500;cursor:pointer;align-items:center;justify-content:center;gap:10px;margin:1rem 0;transition:box-shadow 0.2s,background 0.2s;" onmouseover="this.style.boxShadow='0 1px 2px rgba(60,64,67,0.3),0 1px 3px rgba(60,64,67,0.15)';this.style.background='#f8f9fa';" onmouseout="this.style.boxShadow='none';this.style.background='#fff';">
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.13-.84 2.08-1.78 2.72v2.26h2.88c1.69-1.56 2.66-3.86 2.66-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.88-2.26c-.81.54-1.84.86-3.08.86-2.37 0-4.38-1.6-5.1-3.74H.95v2.33C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.9 10.68c-.18-.54-.29-1.11-.29-1.68s.11-1.14.29-1.68V5H.95C.35 6.19 0 7.55 0 9s.35 2.81.95 4l2.95-2.32z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.95 4.95l2.95 2.33C4.62 5.14 6.63 3.58 9 3.58z"/></svg>
+            Continue with Google
+          </button>
           <p class="auth-modal-terms">By signing in, you agree to our <a href="/terminos.html">Terms</a></p>
         `;
-        this._tryRenderGSIButton();
       }
     },
 
