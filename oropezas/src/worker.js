@@ -105,6 +105,16 @@ async function generateImageWithAI(prompt, env) {
 // ─── Seed Kelowna Articles ──────────────────────────────────
 const KELOWNA_SEED_ARTICLES = [
   {
+    id: 'kelowna-seed-7', title: 'May the 4th Be With You: Kelowna Fans Celebrate Star Wars Day',
+    slug: 'kelowna-may-the-4th',
+    excerpt: 'Kelowna Star Wars fans gathered at local venues across the city to celebrate May the 4th with costume contests, trivia nights, and charity events benefiting the Okanagan Food Bank.',
+    html: '<p><strong>May the 4th be with you, Kelowna!</strong> The force was strong in the Okanagan today as hundreds of Star Wars fans gathered across the city to celebrate the beloved franchise. From Prospera Place to local comic shops, the spirit of rebellion and Jedi wisdom filled the air.</p><h2>Events Across the City</h2><p>At the Kelowna Public Library, a special Star Wars trivia night attracted over 80 participants. "We expected maybe 30 people," said librarian Sarah Chen. "The turnout was incredible." Teams battled through questions ranging from Clone Wars lore to deep-cut Expanded Universe knowledge.</p><p>Meanwhile, the Orchard Park Shopping Centre hosted a cosplay parade with participants of all ages — from toddlers in Ewok costumes to dedicated fans in full stormtrooper armor. Local photographer James Park captured portraits that will be featured in a charity calendar.</p><h2>Charity Fundraiser</h2><p>A highlight of the day was the lightsaber charity auction at BNA Brewing Company, where handmade LED sabers raised over $5,000 for the Okanagan Food Bank. Mayor Tom Dyas attended and declared, "This is what makes Kelowna special — our community coming together for a great cause while having fun."</p><blockquote>"The Star Wars community here is incredibly welcoming. It does not matter if you are a casual fan or can name every species in the Cantina." — Event organizer Lisa Park</blockquote><p>Local schools also participated, with students creating Star Wars-themed art projects. The best pieces will be displayed at the Rotary Centre for the Arts through the weekend.</p><p><em>Missed the events? The Kelowna Comic-Con Society meets every second Thursday at the Laurel Packing House.</em></p>',
+    category: 'noticias', tags: ['community', 'events', 'charity'],
+    featured: true, status: 'published', author: 'Kelowna News Team',
+    site: 'kelowna', date: '2026-05-04', folder: 'noticias',
+    featuredImage: '/LOGO.jpeg', image: '/LOGO.jpeg',
+  },
+  {
     id: 'kelowna-seed-1', title: 'Kelowna Residents Rally to Save Beloved Orchard from Development',
     slug: 'kelowna-residents-rally-save-orchard',
     excerpt: 'Hundreds of Kelowna residents have gathered signatures to save the iconic Johnson Family Orchard, a staple of the community for over five decades.',
@@ -168,21 +178,78 @@ const KELOWNA_SEED_ARTICLES = [
 
 async function seedKelownaArticles(env) {
   try {
-    const existing = await env.OROPEZAS_KV.get('kelowna_articles_index');
-    if (existing) return; // already seeded
-
-    for (const article of KELOWNA_SEED_ARTICLES) {
-      await env.OROPEZAS_KV.put(`article:${article.id}`, JSON.stringify(article));
+    const existingRaw = await env.OROPEZAS_KV.get('kelowna_articles_index');
+    let existing = [];
+    if (existingRaw) {
+      const parsed = JSON.parse(existingRaw);
+      existing = parsed.articles || [];
     }
 
-    await env.OROPEZAS_KV.put('kelowna_articles_index', JSON.stringify({
-      articles: KELOWNA_SEED_ARTICLES,
-      lastUpdated: new Date().toISOString(),
-    }));
+    // Merge new seed articles that don't exist yet
+    const existingIds = new Set(existing.map(a => a.id));
+    const newArticles = [];
+    for (const article of KELOWNA_SEED_ARTICLES) {
+      if (!existingIds.has(article.id)) {
+        await env.OROPEZAS_KV.put(`article:${article.id}`, JSON.stringify(article));
+        newArticles.push(article);
+      }
+    }
 
-    console.log('Kelowna seed articles created');
+    if (newArticles.length > 0) {
+      const merged = [...newArticles, ...existing];
+      await env.OROPEZAS_KV.put('kelowna_articles_index', JSON.stringify({
+        articles: merged,
+        lastUpdated: new Date().toISOString(),
+      }));
+      console.log(`Kelowna articles: added ${newArticles.length} new articles`);
+    }
   } catch (e) {
     console.error('Error seeding Kelowna articles:', e);
+  }
+}
+
+// ─── MAIN SITE SEED ARTICLES ──────────────────────────────
+const MAIN_SEED_ARTICLES = [
+  {
+    id: 'main-seed-may4', title: 'May the 4th Be With You: Star Wars Day Celebrations Take Over Mexico',
+    slug: 'may-the-4th-mexico',
+    excerpt: 'From Mexico City to San Luis Potosí, fans celebrate Star Wars Day with cosplay parades, movie marathons, and special events at cinemas and convention centers across the country.',
+    html: '<p><strong>May the 4th be with you!</strong> Across Mexico, thousands of Star Wars fans are celebrating the iconic franchise on this special day. From massive cosplay gatherings in Mexico City to intimate movie marathons in San Luis Potosí, the force is strong with Mexican fans.</p><h2>Celebrations Across the Country</h2><p>In Mexico City, the Cineteca Nacional is hosting a special screening of the original trilogy, drawing hundreds of fans dressed as Jedi, Sith, and droids. "Star Wars has been part of my life since I was a kid," said attendee Carlos Mendez, dressed as a Mandalorian. "May the 4th is our Christmas."</p><p>Meanwhile, in Guadalajara, the local Comic-Con chapter organized a lightsaber duel tournament at Parque Metropolitano, with over 200 participants showing off their choreographed combat skills.</p><h2>San Luis Potosí Joins the Fun</h2><p>Here in San Luis Potosí, the Centro de las Artes hosted a Star Wars art exhibition featuring local artists reimagining characters with Mexican cultural motifs. Darth Vader wearing a charro suit and Princess Leia with a traditional rebozo were crowd favorites.</p><blockquote>"The combination of Star Wars and Mexican culture creates something truly unique and beautiful." — Artist Maria Gonzalez</blockquote><p>Local cinemas are offering special discounts on Star Wars merchandise and tickets to the latest series streaming on Disney+.</p><p><em>How are you celebrating Star Wars Day? Share your photos with #OropezasMayThe4th</em></p>',
+    category: 'Noticias', tags: ['culture', 'events', 'star wars'],
+    featured: true, status: 'published', author: 'Redacción Oropezas',
+    site: 'main', date: '2026-05-04', folder: 'noticias',
+    featuredImage: '/LOGO.jpeg', image: '/LOGO.jpeg',
+  },
+];
+
+async function seedMainArticles(env) {
+  try {
+    const existingRaw = await env.OROPEZAS_KV.get('articles_index');
+    let existing = [];
+    if (existingRaw) {
+      const parsed = JSON.parse(existingRaw);
+      existing = parsed.articles || [];
+    }
+
+    const existingSlugs = new Set(existing.map(a => a.slug));
+    const newArticles = [];
+    for (const article of MAIN_SEED_ARTICLES) {
+      if (!existingSlugs.has(article.slug)) {
+        await env.OROPEZAS_KV.put(`article:${article.slug}`, JSON.stringify(article));
+        newArticles.push(article);
+      }
+    }
+
+    if (newArticles.length > 0) {
+      const merged = [...newArticles, ...existing];
+      await env.OROPEZAS_KV.put('articles_index', JSON.stringify({
+        articles: merged,
+        lastUpdated: new Date().toISOString(),
+      }));
+      console.log(`Main articles: added ${newArticles.length} new articles`);
+    }
+  } catch (e) {
+    console.error('Error seeding main articles:', e);
   }
 }
 
@@ -624,6 +691,7 @@ export default {
   async fetch(request, env, ctx) {
     // Seed Kelowna articles in background (don't block requests)
     ctx.waitUntil(seedKelownaArticles(env).catch(() => {}));
+    ctx.waitUntil(seedMainArticles(env).catch(() => {}));
 
     const url = new URL(request.url);
     const origin = request.headers.get('Origin');
