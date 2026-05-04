@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="https://oropezas.com/styles.css">
   <title>Article - Kelowna.Oropezas.com</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
@@ -164,50 +164,65 @@ async function sendMessage(text){ if(!text.trim()) return; add(text,"user"); inp
 function type(text){ const d=document.createElement("div"); d.className="msg bot"; messages.appendChild(d); let i=0; function c(){ if(i<text.length){ d.innerHTML=md(text.slice(0,i)); i+=3; messages.scrollTop=messages.scrollHeight; setTimeout(c,15); } } c(); }
 send.onclick = () => sendMessage(input.value);
 
-// Load article
+// Load article: try API first, fallback to embedded
 (function() {
   const params = new URLSearchParams(location.search);
   const slug = params.get('slug');
   if (!slug) { document.getElementById('article-title').textContent = 'Article not found'; return; }
 
-  fetch(API + '/api/article/' + slug)
+  function renderArticle(article) {
+    document.getElementById('article-category').textContent = article.category || 'News';
+    document.getElementById('article-title').textContent = article.title || '';
+    document.getElementById('article-date').textContent = article.date || '';
+    document.getElementById('article-excerpt').textContent = article.excerpt || article.subtitle || '';
+    if (article.featuredImage || article.image) {
+      const img = document.getElementById('article-image');
+      img.src = article.featuredImage || article.image;
+      img.style.display = 'block';
+    }
+    const contentDiv = document.getElementById('article-content');
+    if (article.html) {
+      contentDiv.innerHTML = article.html;
+    } else if (article.content && Array.isArray(article.content)) {
+      contentDiv.innerHTML = article.content.map(b => b.html).join('');
+    } else {
+      contentDiv.textContent = article.excerpt || '';
+    }
+    if (article.tags && article.tags.length) {
+      const tagsDiv = document.getElementById('article-tags');
+      tagsDiv.style.display = 'block';
+      tagsDiv.innerHTML = article.tags.map(t => `<span style="background:#f5f5f5;padding:4px 12px;border-radius:20px;font-size:0.8rem;margin-right:8px;">${t}</span>`).join('');
+    }
+    document.title = (article.title || 'Article') + ' - Kelowna.Oropezas.com';
+  }
+
+  function tryEmbedded() {
+    const articles = window.KELOWNA_ARTICLES || [];
+    const article = articles.find(a => a.slug === slug);
+    if (article) {
+      renderArticle(article);
+    } else {
+      document.getElementById('article-title').textContent = 'Article not found';
+    }
+  }
+
+  fetch(API + '/api/article/' + slug, { signal: AbortSignal.timeout(6000) })
     .then(r => r.json())
     .then(article => {
-      if (article.success === false) {
-        document.getElementById('article-title').textContent = 'Article not found';
+      if (article.success === false || !article.title) {
+        tryEmbedded();
         return;
       }
-      document.getElementById('article-category').textContent = article.category || 'News';
-      document.getElementById('article-title').textContent = article.title || '';
-      document.getElementById('article-date').textContent = article.date || '';
-      document.getElementById('article-excerpt').textContent = article.subtitle || article.excerpt || '';
-      if (article.featuredImage || article.image) {
-        const img = document.getElementById('article-image');
-        img.src = article.featuredImage || article.image;
-        img.style.display = 'block';
-      }
-      const contentDiv = document.getElementById('article-content');
-      if (article.html) {
-        contentDiv.innerHTML = article.html;
-      } else if (article.content && Array.isArray(article.content)) {
-        contentDiv.innerHTML = article.content.map(b => b.html).join('');
-      } else {
-        contentDiv.textContent = article.excerpt || '';
-      }
-      if (article.tags && article.tags.length) {
-        const tagsDiv = document.getElementById('article-tags');
-        tagsDiv.style.display = 'block';
-        tagsDiv.innerHTML = article.tags.map(t => `<span style="background:#f5f5f5;padding:4px 12px;border-radius:20px;font-size:0.8rem;margin-right:8px;">${t}</span>`).join('');
-      }
-      document.title = (article.title || 'Article') + ' - Kelowna.Oropezas.com';
+      renderArticle(article);
     })
     .catch(e => {
-      console.error('Error loading article:', e);
-      document.getElementById('article-title').textContent = 'Error loading article';
+      console.error('Error loading article from API:', e);
+      tryEmbedded();
     });
 })();
 </script>
 
+<script src="kelowna-articles.js"></script>
 <script src="main.js"></script>
 <script src="../auth.js"></script>
 

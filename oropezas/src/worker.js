@@ -1,7 +1,8 @@
-// Deployed via GitHub Actions — 2026-05-02
+// Deployed via GitHub Actions — 2026-05-04
 // src/worker.js - OROPEZAS.COM + KELOWNA.OROPEZAS.COM WORKER UNIFICADO
 // Chat + Suscripciones + Contacto + Rastreador + Push + AI AGENTS
-// AI: Cloudflare Workers AI (Llama 3.1 + Stable Diffusion)
+// AI: Cloudflare Workers AI (Llama 3.1 + Flux-1 Schnell)
+// Images: Flux-1 via @cf/black-forest-labs/flux-1-schnell (SDXL fallback)
 
 
 
@@ -82,13 +83,22 @@ async function runAI(prompt, env, opts = {}) {
 
 async function generateImageWithAI(prompt, env) {
   try {
-    const response = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+    const response = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
       prompt: prompt,
     });
     return { bytes: response, mimeType: 'image/png' };
   } catch (e) {
-    console.error('Cloudflare AI image error:', e.message);
-    throw e;
+    // Fallback to Stable Diffusion if Flux-1 is unavailable
+    console.warn('[AI] Flux-1 unavailable, falling back to SDXL:', e.message);
+    try {
+      const fallback = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+        prompt: prompt,
+      });
+      return { bytes: fallback, mimeType: 'image/png' };
+    } catch (e2) {
+      console.error('[AI] Image generation failed:', e2.message);
+      throw e2;
+    }
   }
 }
 
@@ -572,6 +582,7 @@ Style: documentary photography, natural lighting, clean composition, suitable fo
   const extension = getMimeExtension(mimeType);
   const key = `articles/${category}/${slug}.${extension}`;
   const bytes = imageResult.bytes;
+  const imageModel = 'flux-1-schnell';
 
   await env.OROPEZAS_MEDIA.put(key, bytes, {
     httpMetadata: {
@@ -579,7 +590,7 @@ Style: documentary photography, natural lighting, clean composition, suitable fo
       cacheControl: 'public, max-age=31536000, immutable'
     },
     customMetadata: {
-      model,
+      model: imageModel,
       slug,
       category,
       generatedAt: new Date().toISOString()
@@ -590,7 +601,7 @@ Style: documentary photography, natural lighting, clean composition, suitable fo
     key,
     url: getMediaUrl(key),
     mimeType,
-    model
+    model: imageModel
   };
 }
 
@@ -611,8 +622,8 @@ async function resolverImagenArticulo(article, env, { slug, category }) {
 
 export default {
   async fetch(request, env, ctx) {
-    // Seed Kelowna articles on first request
-    await seedKelownaArticles(env);
+    // Seed Kelowna articles in background (don't block requests)
+    ctx.waitUntil(seedKelownaArticles(env).catch(() => {}));
 
     const url = new URL(request.url);
     const origin = request.headers.get('Origin');
@@ -2400,3 +2411,4 @@ async function handleAgentDelete(request, env, corsHeaders) {
     });
   }
 }
+// Deploy trigger: 2026-05-04T00:58:38Z

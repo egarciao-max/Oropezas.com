@@ -77,85 +77,96 @@
 
       // Initialize with your Google Client ID
       google.accounts.id.initialize({
-        client_id: '549479429584-99b5j2l77d6k97p9f8n1f5m0d5b0h0q7.apps.googleusercontent.com',
+        client_id: '233406003665-phh7pcmg6gr23fdlsfjb5db90avi9vrb.apps.googleusercontent.com',
         callback: (response) => this._handleGoogleCredential(response),
         auto_select: false,
         cancel_on_tap_outside: true,
       });
 
-      // If modal is already open, render the button now
-      const modal = document.getElementById('auth-modal');
-      if (modal && modal.classList.contains('open')) {
-        this._tryRenderGSIButton();
-      }
-
       // DO NOT auto-prompt — user must click Sign In
     },
 
-    // ─── Try to render GSI button ─────────────────────────
-    _tryRenderGSIButton(attempts = 0) {
-      const btn = document.getElementById('google-signin-btn');
-      const fallback = document.getElementById('gsi-fallback-btn');
-
-      if (!btn) {
-        if (attempts < 5) {
-          setTimeout(() => this._tryRenderGSIButton(attempts + 1), 200);
-        }
-        return false;
-      }
-
-      // Always show fallback by default — hide only if GSI renders successfully
-      if (fallback) fallback.style.display = 'flex';
-
-      if (!window.google?.accounts?.id) {
-        // GSI not loaded yet — keep fallback visible, retry
-        if (attempts < 15) {
-          setTimeout(() => this._tryRenderGSIButton(attempts + 1), 300);
-        }
-        return false;
-      }
-
-      // GSI loaded — try to render real button
-      btn.innerHTML = '';
-
-      try {
-        google.accounts.id.renderButton(btn, {
-          theme: 'outline',
-          size:  'large',
-          width: 280,
-          text:  'continue_with',
-          shape: 'rectangular',
-        });
-
-        // Check if button actually appeared after a short delay
-        setTimeout(() => {
-          const hasContent = btn.children.length > 0 || btn.innerHTML.length > 50;
-          if (hasContent && fallback) {
-            // Real button rendered — hide fallback
-            fallback.style.display = 'none';
-          }
-          // If no content, fallback stays visible
-        }, 500);
-
-        return true;
-      } catch (e) {
-        console.error('[AUTH] renderButton failed:', e);
-        // Fallback already visible
-        return false;
-      }
-    },
-
-    // ─── Fallback: trigger Google sign-in manually ──────────
+    // ─── Trigger Google sign-in via one-tap prompt ──────────
     _triggerGSISignIn() {
-      if (window.google?.accounts?.id) {
+      if (!window.google?.accounts?.id) {
+        alert('Google Sign-In is loading. Please wait a moment and try again.');
+        return;
+      }
+
+      const btn = document.querySelector('.gsi-custom-btn');
+      const originalText = btn ? btn.innerHTML : '';
+
+      // Disable button, show loading on button itself (don't destroy modal)
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `
+          <div style="width:16px;height:16px;border:2px solid #f3f3f3;border-top:2px solid #555;border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px;"></div>
+          <span style="color:#555;">Opening Google...</span>
+          <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+        `;
+      }
+
+      // Safety timeout: re-enable button after 6s if nothing happened
+      const timeoutId = setTimeout(() => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText || `
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.13-.84 2.08-1.78 2.72v2.26h2.88c1.69-1.56 2.66-3.86 2.66-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.88-2.26c-.81.54-1.84.86-3.08.86-2.37 0-4.38-1.6-5.1-3.74H.95v2.33C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.9 10.68c-.18-.54-.29-1.11-.29-1.68s.11-1.14.29-1.68V5H.95C.35 6.19 0 7.55 0 9s.35 2.81.95 4l2.95-2.32z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.95 4.95l2.95 2.33C4.62 5.14 6.63 3.58 9 3.58z"/></svg>
+            Try Again
+          `;
+        }
+        // Show a subtle error message below the button
+        let err = document.getElementById('gsi-error-msg');
+        if (!err) {
+          err = document.createElement('p');
+          err.id = 'gsi-error-msg';
+          err.style.cssText = 'color:#c00;font-size:0.8rem;text-align:center;margin-top:0.5rem;';
+          if (btn) btn.parentNode.insertBefore(err, btn.nextSibling);
+        }
+        err.textContent = 'Sign-in timed out. Make sure you are signed into Google in this browser, then try again.';
+      }, 6000);
+
+      // Call Google prompt
+      try {
         google.accounts.id.prompt((notification) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            // One-tap not available — show error
-            alert('Google Sign-In is not available. Please check your popup blocker settings.');
+          clearTimeout(timeoutId); // Cancel safety timeout
+
+          // Restore button
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
           }
+          // Clear error message
+          const err = document.getElementById('gsi-error-msg');
+          if (err) err.remove();
+
+          // Check if prompt was displayed
+          let reason = null;
+          try {
+            if (notification.isNotDisplayedReason) {
+              reason = notification.getNotDisplayedReason();
+            } else if (notification.getNotDisplayedReason) {
+              reason = notification.getNotDisplayedReason();
+            }
+          } catch (e) { /* ignore */ }
+
+          if (reason === 'opt_out_or_no_session') {
+            this._showAuthError('Please sign into your Google account in this browser first, then try again.');
+          } else if (reason === 'browser_not_supported') {
+            this._showAuthError('Your browser does not support Google Sign-In. Try Chrome or Safari.');
+          } else if (reason) {
+            this._showAuthError('Sign-in was blocked. Check popup settings and try again.');
+          }
+          // If no reason, prompt was shown successfully
         });
-      } else {
-        alert('Google Sign-In is loading. Please try again in a moment.');
+      } catch (e) {
+        clearTimeout(timeoutId);
+        console.error('[AUTH] prompt failed:', e);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+        this._showAuthError('Google Sign-In failed. Please try again.');
       }
     },
 
@@ -228,10 +239,12 @@
           <div style="background:#fee;color:#c00;padding:0.75rem 1rem;border-radius:4px;margin-bottom:1rem;font-size:0.85rem;">
             ⚠️ ${msg}
           </div>
-          <div id="google-signin-btn" style="display:flex;justify-content:center;"></div>
+          <button class="gsi-custom-btn" onclick="OROPEZAS_AUTH._triggerGSISignIn()" style="display:flex;width:100%;padding:12px 16px;background:#fff;border:1px solid #dadce0;border-radius:4px;color:#3c4043;font-size:14px;font-weight:500;cursor:pointer;align-items:center;justify-content:center;gap:10px;margin:1rem 0;transition:box-shadow 0.2s,background 0.2s;" onmouseover="this.style.boxShadow='0 1px 2px rgba(60,64,67,0.3),0 1px 3px rgba(60,64,67,0.15)';this.style.background='#f8f9fa';" onmouseout="this.style.boxShadow='none';this.style.background='#fff';">
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.13-.84 2.08-1.78 2.72v2.26h2.88c1.69-1.56 2.66-3.86 2.66-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.88-2.26c-.81.54-1.84.86-3.08.86-2.37 0-4.38-1.6-5.1-3.74H.95v2.33C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.9 10.68c-.18-.54-.29-1.11-.29-1.68s.11-1.14.29-1.68V5H.95C.35 6.19 0 7.55 0 9s.35 2.81.95 4l2.95-2.32z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.95 4.95l2.95 2.33C4.62 5.14 6.63 3.58 9 3.58z"/></svg>
+            Continue with Google
+          </button>
           <p class="auth-modal-terms">By signing in, you agree to our <a href="/terminos.html">Terms</a></p>
         `;
-        this._tryRenderGSIButton();
       }
     },
 
@@ -253,8 +266,6 @@
             // Check if auth controls now exist
             if (header.querySelector('.auth-nav-controls')) {
               this._updateUI();
-              // Also try to render GSI button if modal exists
-              this._tryRenderGSIButton();
             }
           }
         }
@@ -268,7 +279,6 @@
         attempts++;
         if (header.querySelector('.auth-nav-controls')) {
           this._updateUI();
-          this._tryRenderGSIButton();
           clearInterval(interval);
         }
         if (attempts > 20) clearInterval(interval); // Stop after ~4s
@@ -337,9 +347,7 @@
             <div class="auth-modal-logo"><img src="/LOGO.jpeg" alt="Logo" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:1.5rem;font-weight:900;>OROPEZAS</span>';"></div>
             <p class="auth-modal-title">Sign In</p>
             <p class="auth-modal-subtitle">Access your account with Google</p>
-            <div id="google-signin-btn" style="display:flex;justify-content:center;margin:1.5rem 0;min-height:40px;"></div>
-            <!-- Fallback button in case GSI render fails -->
-            <button id="gsi-fallback-btn" onclick="OROPEZAS_AUTH._triggerGSISignIn()" style="display:flex;width:100%;padding:12px 16px;background:#fff;border:1px solid #dadce0;border-radius:4px;color:#3c4043;font-size:14px;font-weight:500;cursor:pointer;align-items:center;justify-content:center;gap:8px;margin:1rem 0;">
+            <button class="gsi-custom-btn" onclick="OROPEZAS_AUTH._triggerGSISignIn()" style="display:flex;width:100%;padding:12px 16px;background:#fff;border:1px solid #dadce0;border-radius:4px;color:#3c4043;font-size:14px;font-weight:500;cursor:pointer;align-items:center;justify-content:center;gap:10px;margin:1.5rem 0;transition:box-shadow 0.2s,background 0.2s;" onmouseover="this.style.boxShadow='0 1px 2px rgba(60,64,67,0.3),0 1px 3px rgba(60,64,67,0.15)';this.style.background='#f8f9fa';" onmouseout="this.style.boxShadow='none';this.style.background='#fff';">
               <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.13-.84 2.08-1.78 2.72v2.26h2.88c1.69-1.56 2.66-3.86 2.66-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.88-2.26c-.81.54-1.84.86-3.08.86-2.37 0-4.38-1.6-5.1-3.74H.95v2.33C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.9 10.68c-.18-.54-.29-1.11-.29-1.68s.11-1.14.29-1.68V5H.95C.35 6.19 0 7.55 0 9s.35 2.81.95 4l2.95-2.32z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.95 4.95l2.95 2.33C4.62 5.14 6.63 3.58 9 3.58z"/></svg>
               Continue with Google
             </button>
@@ -351,13 +359,6 @@
 
       modal.classList.add('open');
       document.body.style.overflow = 'hidden';
-
-      // Try to render GSI button — with multiple retries
-      this._tryRenderGSIButton();
-
-      // Also try after a short delay (script might still be loading)
-      setTimeout(() => this._tryRenderGSIButton(), 500);
-      setTimeout(() => this._tryRenderGSIButton(), 1500);
     },
 
     // ─── Close Modal ──────────────────────────────────────

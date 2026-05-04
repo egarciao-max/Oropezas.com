@@ -83,11 +83,14 @@ function renderGrid(articles) {
 async function loadArticles() {
     try {
         var page = document.body.dataset.page || 'index';
-        var response = await fetch(API_BASE + '/api/articles');
+        var response = await fetch(API_BASE + '/api/articles', { signal: AbortSignal.timeout(8000) });
         var data = await response.json();
         var articles = Array.isArray(data.articles) ? data.articles : [];
 
-        if (!articles.length) return;
+        if (!articles.length) {
+            loadEmbeddedFallback();
+            return;
+        }
 
         if (page === 'index') {
             renderFeatured(articles[0]);
@@ -97,7 +100,74 @@ async function loadArticles() {
         }
     } catch (error) {
         console.error('Error cargando artículos:', error);
+        loadEmbeddedFallback();
     }
 }
 
+function showNoArticles() {
+    var featured = document.getElementById('featured-container');
+    var grid = document.getElementById('articles-grid');
+    if (featured) featured.innerHTML = '<p style="color:var(--gray-text);padding:2rem;text-align:center;">No hay artículos disponibles.</p>';
+    if (grid) grid.innerHTML = '<p style="color:var(--gray-text);padding:2rem;text-align:center;">No hay artículos disponibles.</p>';
+}
+
+function showLoadError() {
+    var featured = document.getElementById('featured-container');
+    var grid = document.getElementById('articles-grid');
+    var msg = '<p style="color:var(--gray-text);padding:2rem;text-align:center;">⚠️ No se pudieron cargar los artículos. Verifica tu conexión o intenta de nuevo más tarde.</p>';
+    if (featured) featured.innerHTML = msg;
+    if (grid) grid.innerHTML = msg;
+}
+
 document.addEventListener('DOMContentLoaded', loadArticles);
+
+// ─── EMBEDDED FALLBACK ARTICLES (works offline) ───
+const EMBEDDED_ARTICLES = [
+  {
+    slug: 'slp-inaugura-parque', title: 'San Luis Potosí Inaugura Nuevo Parque Urbano',
+    excerpt: 'El gobierno estatal inauguró un nuevo parque urbano de 12 hectáreas en la zona norte de la capital potosina, con áreas verdes, canchas deportivas y un lago artificial.',
+    category: 'Noticias', date: '2026-05-04', author: 'Redacción Oropezas',
+    image: '', featuredImage: ''
+  },
+  {
+    slug: 'tec-slp-nuevo-laboratorio', title: 'Tec de Monterrey Campus SLP Abre Laboratorio de IA',
+    excerpt: 'El Instituto Tecnológico y de Estudios Superiores de Monterrey en San Luis Potosí inauguró un laboratorio de inteligencia artificial enfocado en investigación aplicada.',
+    category: 'Tecnología', date: '2026-05-03', author: 'Tech Desk',
+    image: '', featuredImage: ''
+  },
+  {
+    slug: 'atletico-potosino-campeon', title: 'Atlético Potosino se Corona Campeón de la Liga Premier',
+    excerpt: 'En un emocionante partido de final, el Atlético Potosino logró el campeonato tras vencer 2-1 al Real de Catorce en el Estadio Alfonso Lastras.',
+    category: 'Deportes', date: '2026-05-02', author: 'Deportes Oropezas',
+    image: '', featuredImage: ''
+  },
+  {
+    slug: 'festival-cultural-zacatecas', title: 'Festival Internacional de Arte Contemporáneo Llega a la Zona Centro',
+    excerpt: 'Más de 50 artistas nacionales e internacionales participarán en el festival que transformará las calles del centro histórico en galerías al aire libre.',
+    category: 'Noticias', date: '2026-05-01', author: 'Cultura SLP',
+    image: '', featuredImage: ''
+  },
+  {
+    slug: 'inversion-automotriz-slp', title: 'Nueva Inversión Automotriz Generará 2,000 Empleos en SLP',
+    excerpt: 'Una empresa alemana anunció la expansión de su planta de manufactura en el Parque Industrial de San Luis Potosí, con una inversión de 150 millones de dólares.',
+    category: 'Noticias', date: '2026-04-30', author: 'Economía Oropezas',
+    image: '', featuredImage: ''
+  },
+  {
+    slug: 'alerta-calor-extremo', title: 'Protección Civil Emite Alerta por Calor Extremo en el Estado',
+    excerpt: 'Se esperan temperaturas superiores a 40°C en la zona centro y media del estado. Se recomienda hidratación constante y evitar actividades al aire libre entre las 12:00 y 16:00 hrs.',
+    category: 'Noticias', date: '2026-04-29', author: 'Protección Civil',
+    image: '', featuredImage: ''
+  }
+];
+
+function loadEmbeddedFallback() {
+    var page = document.body.dataset.page || 'index';
+    var articles = EMBEDDED_ARTICLES;
+    if (page === 'index') {
+        renderFeatured(articles[0]);
+        renderGrid(articles.slice(1, 7));
+    } else {
+        renderGrid(articles);
+    }
+}

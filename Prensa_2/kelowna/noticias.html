@@ -66,41 +66,9 @@ function removeLoader(){ const t=document.getElementById("typing"); if(t) t.remo
 async function sendMessage(text){ if(!text.trim()) return; add(text,"user"); input.value=""; input.style.height="auto"; loader(); try{ const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text,site:"kelowna"})}); const d=await r.json(); removeLoader(); type(d.reply||"I can help with Kelowna.Oropezas.com"); }catch{ removeLoader(); add("Connection error.","bot"); }}
 function type(text){ const d=document.createElement("div"); d.className="msg bot"; messages.appendChild(d); let i=0; function c(){ if(i<text.length){ d.innerHTML=md(text.slice(0,i)); i+=3; messages.scrollTop=messages.scrollHeight; setTimeout(c,15); } } c(); }
 send.onclick = () => sendMessage(input.value);
-
-// Load news with site filter
-fetch(API + '/api/articles?site=kelowna')
-  .then(r => r.json())
-  .then(data => {
-    const articles = data.articles || [];
-    const grid = document.getElementById('articles-grid');
-    if (articles.length === 0) {
-      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--gray-text);padding:3rem;">No articles yet. Check back soon!</p>';
-      return;
-    }
-    articles.forEach(a => {
-      const card = document.createElement('div');
-      card.className = 'article-card';
-      card.style.cursor = 'pointer';
-      card.onclick = () => location.href = 'article.html?slug=' + a.slug;
-      card.innerHTML = `
-        <div class="article-card-image">
-          <img src="${a.image || '../LOGO.jpeg'}" alt="${a.title}" style="width:100%;height:100%;object-fit:cover;"
-            onerror="this.style.display='none';this.parentElement.style.background='var(--gray-light)';this.parentElement.innerHTML='<span style=font-size:2.5rem;color:var(--gray-text);>📰</span>';">
-        </div>
-        <span class="article-card-category">${a.category || 'News'}</span>
-        <h3>${a.title}</h3>
-        <p class="article-card-excerpt">${a.excerpt || ''}</p>
-        <span class="article-card-date">${a.date || ''}</span>
-        <span class="article-card-link">Read more →</span>`;
-      grid.appendChild(card);
-    });
-  })
-  .catch(err => {
-    console.error('Error:', err);
-    document.getElementById('articles-grid').innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--gray-text);padding:3rem;">Unable to load articles.</p>';
-  });
 </script>
 
+<script src="kelowna-articles.js"></script>
 <script src="main.js"></script>
 <script src="../auth.js"></script>
 
