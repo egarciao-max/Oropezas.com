@@ -622,8 +622,8 @@ async function resolverImagenArticulo(article, env, { slug, category }) {
 
 export default {
   async fetch(request, env, ctx) {
-    // Seed Kelowna articles on first request
-    await seedKelownaArticles(env);
+    // Seed Kelowna articles in background (don't block requests)
+    ctx.waitUntil(seedKelownaArticles(env).catch(() => {}));
 
     const url = new URL(request.url);
     const origin = request.headers.get('Origin');
