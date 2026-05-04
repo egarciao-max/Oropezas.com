@@ -2532,3 +2532,5 @@ async function handleAgentDelete(request, env, corsHeaders) {
   }
 }
 // Deploy trigger: 2026-05-04T00:58:38Z
+
+// FIXED: Removed stray Z character that caused ReferenceError
