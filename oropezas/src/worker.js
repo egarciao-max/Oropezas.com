@@ -856,6 +856,28 @@ export default {
     // ENDPOINTS EXISTENTES (SIN CAMBIOS)
     // ============================================================
 
+    // ─── Newsletter subscription ────────────────────────────
+    if (url.pathname === '/api/subscribe' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const nombre = body.nombre?.trim();
+        const email = body.email?.trim();
+        if (!email?.includes('@')) {
+          return new Response(JSON.stringify({ success: false, error: 'Email inválido' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        const result = await handleSubscribe(nombre, email, env);
+        return new Response(JSON.stringify(result), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (e) {
+        return new Response(JSON.stringify({ success: false, error: 'Error processing request' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
     if (url.pathname === '/api/push/subscribe' && request.method === 'POST') {
       try {
         const subscription = await request.json();
@@ -1558,10 +1580,14 @@ async function handleChatMessage(message, env, site) {
   }
 
   const siteName = isKelowna ? 'Kelowna.Oropezas.com' : 'Oropezas.com';
+  const siteDesc = isKelowna
+    ? 'Kelowna.Oropezas.com is a local news website covering events and stories from Kelowna, BC, Canada. It is NOT a store.'
+    : 'Oropezas.com is a local news website covering events and stories from San Luis Potosi, Mexico. It is NOT a store.';
   const systemPrompt = `You are the exclusive assistant of ${siteName}.
-Answer ONLY with content from the site.
-If you cannot answer, say exactly: "I can help you with something related to ${siteName}"
-Consider weather, greetings, and if they say "lemon" you are a normal AI assistant.
+${siteDesc}
+You answer questions about local news, events, weather, and general greetings.
+If you cannot answer from the content below, say exactly: "I can help you with something related to ${siteName}"
+If the user says "lemon" you become a normal AI assistant.
 Content: ${contexto}`;
 
   const userPrompt = isKelowna ? message : `Pregunta: ${message}`;
