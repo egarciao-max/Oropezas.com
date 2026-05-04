@@ -119,20 +119,33 @@
       const modalCard = document.querySelector('.auth-modal-card');
       if (modalCard) {
         modalCard.innerHTML = `
-          <div style="text-align:center;padding:2rem;">
+          <div style="text-align:center;padding:2rem;" id="auth-signing-in">
             <div style="width:40px;height:40px;border:3px solid #f3f3f3;border-top:3px solid #000;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1rem;"></div>
             <p style="color:#555;font-size:0.9rem;">Signing in...</p>
+            <p style="color:#888;font-size:0.75rem;margin-top:0.5rem;">This may take a few seconds</p>
           </div>
           <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
         `;
       }
 
+      // 12-second safety timeout: if fetch hangs, show error
+      const safetyTimeout = setTimeout(() => {
+        console.error('[AUTH] Sign-in timed out after 12s');
+        this._showAuthError('Sign-in timed out. The server may be busy. Please try again.');
+      }, 12000);
+
       try {
+        const controller = new AbortController();
+        const fetchTimeout = setTimeout(() => controller.abort(), 10000);
+
         const res = await fetch(API + '/api/auth/google', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ accessToken: tokenResponse.access_token }),
+          signal:  controller.signal,
         });
+        clearTimeout(fetchTimeout);
+        clearTimeout(safetyTimeout);
 
         const data = await res.json();
 
@@ -149,8 +162,13 @@
           this._showAuthError(data.error || 'Authentication failed');
         }
       } catch (err) {
+        clearTimeout(safetyTimeout);
         console.error('[AUTH] Error verifying token:', err);
-        this._showAuthError('Network error. Please try again.');
+        if (err.name === 'AbortError') {
+          this._showAuthError('Sign-in timed out. Please check your connection and try again.');
+        } else {
+          this._showAuthError('Network error. Please try again.');
+        }
       }
     },
 
@@ -164,20 +182,33 @@
       const modalCard = document.querySelector('.auth-modal-card');
       if (modalCard) {
         modalCard.innerHTML = `
-          <div style="text-align:center;padding:2rem;">
+          <div style="text-align:center;padding:2rem;" id="auth-signing-in">
             <div style="width:40px;height:40px;border:3px solid #f3f3f3;border-top:3px solid #000;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1rem;"></div>
             <p style="color:#555;font-size:0.9rem;">Signing in...</p>
+            <p style="color:#888;font-size:0.75rem;margin-top:0.5rem;">This may take a few seconds</p>
           </div>
           <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
         `;
       }
 
+      // 12-second safety timeout
+      const safetyTimeout = setTimeout(() => {
+        console.error('[AUTH] Sign-in timed out after 12s');
+        this._showAuthError('Sign-in timed out. The server may be busy. Please try again.');
+      }, 12000);
+
       try {
+        const controller = new AbortController();
+        const fetchTimeout = setTimeout(() => controller.abort(), 10000);
+
         const res = await fetch(API + '/api/auth/google', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ idToken: response.credential }),
+          signal:  controller.signal,
         });
+        clearTimeout(fetchTimeout);
+        clearTimeout(safetyTimeout);
 
         const data = await res.json();
 
@@ -194,8 +225,13 @@
           this._showAuthError(data.error || 'Authentication failed');
         }
       } catch (err) {
+        clearTimeout(safetyTimeout);
         console.error('[AUTH] Error verifying token:', err);
-        this._showAuthError('Network error. Please try again.');
+        if (err.name === 'AbortError') {
+          this._showAuthError('Sign-in timed out. Please check your connection and try again.');
+        } else {
+          this._showAuthError('Network error. Please try again.');
+        }
       }
     },
 

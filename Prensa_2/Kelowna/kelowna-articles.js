@@ -85,8 +85,10 @@ document.addEventListener('DOMContentLoaded', function() {
   var page = document.body.dataset.page || 'index';
   
   // Try API first
+  var controller = new AbortController();
+  setTimeout(function() { controller.abort(); }, 5000);
   fetch('https://oropezas.enriquegarciaoropeza.workers.dev/api/articles?site=kelowna', {
-    signal: AbortSignal.timeout(6000)
+    signal: controller.signal
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {

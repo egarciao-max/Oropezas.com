@@ -81,9 +81,12 @@ function renderGrid(articles) {
 }
 
 async function loadArticles() {
+    var page = document.body.dataset.page || 'index';
     try {
-        var page = document.body.dataset.page || 'index';
-        var response = await fetch(API_BASE + '/api/articles', { signal: AbortSignal.timeout(8000) });
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, 4000);
+        var response = await fetch(API_BASE + '/api/articles', { signal: controller.signal });
+        clearTimeout(timeoutId);
         var data = await response.json();
         var articles = Array.isArray(data.articles) ? data.articles : [];
 
