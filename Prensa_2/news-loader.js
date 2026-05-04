@@ -82,6 +82,16 @@ function renderGrid(articles) {
 
 async function loadArticles() {
     var page = document.body.dataset.page || 'index';
+
+    // Show embedded fallback IMMEDIATELY so page is never blank
+    if (page === 'index') {
+        renderFeatured(EMBEDDED_ARTICLES[0]);
+        renderGrid(EMBEDDED_ARTICLES.slice(1, 7));
+    } else {
+        renderGrid(EMBEDDED_ARTICLES);
+    }
+
+    // Then try API in background and update if successful
     try {
         var controller = new AbortController();
         var timeoutId = setTimeout(function() { controller.abort(); }, 4000);
@@ -90,20 +100,17 @@ async function loadArticles() {
         var data = await response.json();
         var articles = Array.isArray(data.articles) ? data.articles : [];
 
-        if (!articles.length) {
-            loadEmbeddedFallback();
-            return;
-        }
-
-        if (page === 'index') {
-            renderFeatured(articles[0]);
-            renderGrid(articles.slice(1, 7));
-        } else {
-            renderGrid(articles);
+        if (articles.length > 0) {
+            if (page === 'index') {
+                renderFeatured(articles[0]);
+                renderGrid(articles.slice(1, 7));
+            } else {
+                renderGrid(articles);
+            }
         }
     } catch (error) {
         console.error('Error cargando artículos:', error);
-        loadEmbeddedFallback();
+        // Fallback articles already visible, no action needed
     }
 }
 

@@ -90,26 +90,69 @@
 
     // ─── PRIMARY: TokenClient Popup Sign-In ────────────────
     _startGoogleSignIn() {
+      // Hard timeout: if nothing happens in 6s, show error
+      // (iOS Safari can silently fail when not signed into Google)
+      this._signInStartTime = Date.now();
+      this._signInTimeout = setTimeout(() => {
+        console.error('[AUTH] Sign-in silently failed after 6s (iOS Safari?)');
+        this._showAuthErrorWithCancel(
+          'Sign-in could not complete. Make sure you are signed into Google in Safari settings, or try a different browser.'
+        );
+      }, 6000);
+
       if (this.tokenClient) {
         try {
           this.tokenClient.requestAccessToken({ prompt: 'consent' });
-          // Show loading state on button
-          const btn = document.getElementById('gsi-fallback-btn');
-          if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #f3f3f3;border-top:2px solid #555;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:8px;vertical-align:middle;"></span>Opening Google...';
+          // Show loading state
+          const modalCard = document.querySelector('.auth-modal-card');
+          if (modalCard) {
+            modalCard.innerHTML = `
+              <div style="text-align:center;padding:2rem;" id="auth-signing-in">
+                <div style="width:40px;height:40px;border:3px solid #f3f3f3;border-top:3px solid #000;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1rem;"></div>
+                <p style="color:#555;font-size:0.9rem;">Opening Google Sign-In...</p>
+                <button onclick="OROPEZAS_AUTH.closeLoginModal()" style="margin-top:1rem;padding:8px 16px;background:none;border:1px solid #ddd;border-radius:4px;color:#666;font-size:0.8rem;cursor:pointer;">Cancel</button>
+              </div>
+              <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+            `;
           }
           return;
         } catch (e) {
           console.error('[AUTH] TokenClient requestAccessToken failed:', e);
+          clearTimeout(this._signInTimeout);
+          this._showAuthError('Sign-in failed to start. Please try again.');
         }
+      } else {
+        // TokenClient not available — use renderButton fallback
+        clearTimeout(this._signInTimeout);
+        this._renderGSIButton();
       }
-      // Fallback: use renderButton if TokenClient isn't available
-      this._renderGSIButton();
+    },
+
+    // ─── Show auth error with cancel button ─────────────────
+    _showAuthErrorWithCancel(msg) {
+      clearTimeout(this._signInTimeout);
+      const modalCard = document.querySelector('.auth-modal-card');
+      if (modalCard) {
+        modalCard.innerHTML = `
+          <button class="auth-modal-close" onclick="OROPEZAS_AUTH.closeLoginModal()">&times;</button>
+          <div class="auth-modal-logo"><img src="/LOGO.jpeg" alt="Logo" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:1.5rem;font-weight:900;>OROPEZAS</span>';"></div>
+          <p class="auth-modal-title">Sign In</p>
+          <div style="background:#fee;color:#c00;padding:0.75rem 1rem;border-radius:4px;margin-bottom:1rem;font-size:0.85rem;">
+            &#9888; ${msg}
+          </div>
+          <button id="gsi-fallback-btn" onclick="OROPEZAS_AUTH._startGoogleSignIn()" style="display:flex;width:100%;padding:12px 16px;background:#fff;border:1px solid #dadce0;border-radius:4px;color:#3c4043;font-size:14px;font-weight:500;cursor:pointer;align-items:center;justify-content:center;gap:10px;margin:1rem 0;transition:box-shadow 0.2s,background 0.2s;" onmouseover="this.style.boxShadow='0 1px 2px rgba(60,64,67,0.3),0 1px 3px rgba(60,64,67,0.15)';this.style.background='#f8f9fa';" onmouseout="this.style.boxShadow='none';this.style.background='#fff';">
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.13-.84 2.08-1.78 2.72v2.26h2.88c1.69-1.56 2.66-3.86 2.66-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.88-2.26c-.81.54-1.84.86-3.08.86-2.37 0-4.38-1.6-5.1-3.74H.95v2.33C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.9 10.68c-.18-.54-.29-1.11-.29-1.68s.11-1.14.29-1.68V5H.95C.35 6.19 0 7.55 0 9s.35 2.81.95 4l2.95-2.32z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.95 4.95l2.95 2.33C4.62 5.14 6.63 3.58 9 3.58z"/></svg>
+            Try Again
+          </button>
+          <div id="gsi-button-container" style="display:none;"></div>
+          <p class="auth-modal-terms">By signing in, you agree to our <a href="/terminos.html">Terms of Use</a> and <a href="/privacidad.html">Privacy Policy</a>.</p>
+        `;
+      }
     },
 
     // ─── Handle TokenClient Response ──────────────────────
     async _handleTokenResponse(tokenResponse) {
+      clearTimeout(this._signInTimeout);
       if (!tokenResponse?.access_token) {
         this._showAuthError('No access token received from Google.');
         return;
@@ -174,6 +217,7 @@
 
     // ─── Handle Google Credential (renderButton fallback) ─
     async _handleGoogleCredential(response) {
+      clearTimeout(this._signInTimeout);
       if (!response?.credential) {
         console.error('[AUTH] No credential in Google response');
         return;
