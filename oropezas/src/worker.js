@@ -709,12 +709,34 @@ export default {
     if (url.pathname === '/api/auth/google' && request.method === 'POST') {
       try {
         const body = await request.json();
-        const payload = decodeGoogleToken(body.idToken);
-        if (!payload) {
+        let payload = null;
+
+        // ─── Method 1: ID Token (JWT from GIS renderButton/prompt) ───
+        if (body.idToken) {
+          payload = decodeGoogleToken(body.idToken);
+        }
+        // ─── Method 2: Access Token (from GIS TokenClient popup) ───
+        else if (body.accessToken) {
+          try {
+            const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo?access_token=' + encodeURIComponent(body.accessToken));
+            if (userRes.ok) {
+              const userData = await userRes.json();
+              payload = {
+                sub:   userData.sub,
+                email: userData.email,
+                name:  userData.name,
+                picture: userData.picture,
+              };
+            }
+          } catch (e) { console.error('[AUTH] Userinfo fetch failed:', e); }
+        }
+
+        if (!payload || !payload.sub) {
           return new Response(JSON.stringify({ success: false, error: 'Token inválido o expirado' }), {
             status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
+
         const uid = payload.sub;
         // Load or create user profile from KV
         let userProfile = null;
