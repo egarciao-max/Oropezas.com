@@ -127,6 +127,13 @@ document.addEventListener('DOMContentLoaded', loadArticles);
 // ─── EMBEDDED FALLBACK ARTICLES (works offline) ───
 const EMBEDDED_ARTICLES = [
   {
+    slug: 'may-the-4th-mexico', title: 'May the 4th Be With You: Star Wars Day Celebrations Take Over Mexico',
+    excerpt: 'From Mexico City to San Luis Potosí, fans celebrate Star Wars Day with cosplay parades, movie marathons, and special events at cinemas and convention centers across the country.',
+    category: 'Noticias', date: '2026-05-04', author: 'Redacción Oropezas',
+    image: '', featuredImage: '',
+    html: '<p><strong>May the 4th be with you!</strong> Across Mexico, thousands of Star Wars fans are celebrating the iconic franchise on this special day. From massive cosplay gatherings in Mexico City to intimate movie marathons in San Luis Potosí, the force is strong with Mexican fans.</p><h2>Celebrations Across the Country</h2><p>In Mexico City, the Cineteca Nacional is hosting a special screening of the original trilogy, drawing hundreds of fans dressed as Jedi, Sith, and droids. "Star Wars has been part of my life since I was a kid," said attendee Carlos Mendez, dressed as a Mandalorian. "May the 4th is our Christmas."</p><p>Meanwhile, in Guadalajara, the local Comic-Con chapter organized a lightsaber duel tournament at Parque Metropolitano, with over 200 participants showing off their choreographed combat skills.</p><h2>San Luis Potosí Joins the Fun</h2><p>Here in San Luis Potosí, the Centro de las Artes hosted a Star Wars art exhibition featuring local artists reimagining characters with Mexican cultural motifs. Darth Vader wearing a charro suit and Princess Leia with a traditional rebozo were crowd favorites.</p><blockquote>"The combination of Star Wars and Mexican culture creates something truly unique and beautiful." — Artist Maria Gonzalez</blockquote><p>Local cinemas are offering special discounts on Star Wars merchandise and tickets to the latest series streaming on Disney+.</p><p><em>How are you celebrating Star Wars Day? Share your photos with #OropezasMayThe4th</em></p>'
+  },
+  {
     slug: 'slp-inaugura-parque', title: 'San Luis Potosí Inaugura Nuevo Parque Urbano',
     excerpt: 'El gobierno estatal inauguró un nuevo parque urbano de 12 hectáreas en la zona norte de la capital potosina, con áreas verdes, canchas deportivas y un lago artificial.',
     category: 'Noticias', date: '2026-05-04', author: 'Redacción Oropezas',

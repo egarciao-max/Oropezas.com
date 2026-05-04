@@ -1,6 +1,12 @@
 // Kelowna articles embedded directly - works even if API is down
 const KELOWNA_ARTICLES = [
   {
+    id: 'k7', slug: 'kelowna-may-the-4th', title: 'May the 4th Be With You: Kelowna Fans Celebrate Star Wars Day',
+    excerpt: 'Kelowna Star Wars fans gathered at local venues across the city to celebrate May the 4th with costume contests, trivia nights, and charity events benefiting the Okanagan Food Bank.',
+    category: 'noticias', date: '2026-05-04', author: 'Kelowna News',
+    html: '<p><strong>May the 4th be with you, Kelowna!</strong> The force was strong in the Okanagan today as hundreds of Star Wars fans gathered across the city to celebrate the beloved franchise. From Prospera Place to local comic shops, the spirit of rebellion and Jedi wisdom filled the air.</p><h2>Events Across the City</h2><p>At the Kelowna Public Library, a special Star Wars trivia night attracted over 80 participants. "We expected maybe 30 people," said librarian Sarah Chen. "The turnout was incredible." Teams battled through questions ranging from Clone Wars lore to deep-cut Expanded Universe knowledge.</p><p>Meanwhile, the Orchard Park Shopping Centre hosted a cosplay parade with participants of all ages — from toddlers in Ewok costumes to dedicated fans in full stormtrooper armor. Local photographer James Park captured portraits that will be featured in a charity calendar.</p><h2>Charity Fundraiser</h2><p>A highlight of the day was the lightsaber charity auction at BNA Brewing Company, where handmade LED sabers raised over $5,000 for the Okanagan Food Bank. Mayor Tom Dyas attended and declared, "This is what makes Kelowna special — our community coming together for a great cause while having fun."</p><blockquote>"The Star Wars community here is incredibly welcoming. It does not matter if you are a casual fan or can name every species in the Cantina." — Event organizer Lisa Park</blockquote><p>Local schools also participated, with students creating Star Wars-themed art projects. The best pieces will be displayed at the Rotary Centre for the Arts through the weekend.</p><p><em>Missed the events? The Kelowna Comic-Con Society meets every second Thursday at the Laurel Packing House.</em></p>'
+  },
+  {
     id: 'k1', slug: 'kelowna-orchard-save', title: 'Kelowna Residents Rally to Save Beloved Orchard from Development',
     excerpt: 'Hundreds of Kelowna residents have gathered signatures to save the iconic Johnson Family Orchard.',
     category: 'noticias', date: '2026-05-04', author: 'Kelowna News',
