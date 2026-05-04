@@ -7,7 +7,7 @@
   'use strict';
 
   // ─── CONFIG ──────────────────────────────────────────────
-  const ADSENSE_PUB_ID = ''; // ← Add your pub-XXXXXXXXXXXXXXXX ID here after AdSense approval
+  const ADSENSE_PUB_ID = 'pub-8411594357975477';
 
   // ─── COOKIE CONSENT BANNER ───────────────────────────────
   function initCookieConsent() {
