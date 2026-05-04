@@ -112,7 +112,8 @@ const KELOWNA_SEED_ARTICLES = [
     category: 'noticias', tags: ['culture', 'events'],
     featured: true, status: 'published', author: 'Kelowna News Team',
     site: 'kelowna', date: '2026-05-04', folder: 'noticias',
-    featuredImage: '/LOGO.jpeg', image: '/LOGO.jpeg',
+    featuredImage: 'https://oropezas.enriquegarciaoropeza.workers.dev/api/media/articles/noticias/may-the-4th-2026.png',
+    image: 'https://oropezas.enriquegarciaoropeza.workers.dev/api/media/articles/noticias/may-the-4th-2026.png',
   },
   {
     id: 'kelowna-seed-1', title: 'Kelowna Residents Rally to Save Beloved Orchard from Development',
