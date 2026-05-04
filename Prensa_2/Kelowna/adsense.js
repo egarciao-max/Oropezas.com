@@ -48,13 +48,13 @@
     // Load AdSense script
     var script = document.createElement('script');
     script.async = true;
-    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADSENSE_PUB_ID;
+    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-' + ADSENSE_PUB_ID;
     script.crossOrigin = 'anonymous';
     document.head.appendChild(script);
 
     // Initialize ad slots
     document.querySelectorAll('.adsbygoogle').forEach(function(slot) {
-      slot.setAttribute('data-ad-client', ADSENSE_PUB_ID);
+      slot.setAttribute('data-ad-client', 'ca-' + ADSENSE_PUB_ID);
       try {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch(e) { console.log('[ADSENSE] Ad push error:', e); }
