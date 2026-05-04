@@ -83,12 +83,6 @@
         cancel_on_tap_outside: true,
       });
 
-      // If modal is already open, render the button now
-      const modal = document.getElementById('auth-modal');
-      if (modal && modal.classList.contains('open')) {
-        this._tryRenderGSIButton();
-      }
-
       // DO NOT auto-prompt — user must click Sign In
     },
 
@@ -99,42 +93,81 @@
         return;
       }
 
-      // Show loading in modal
-      const modalCard = document.querySelector('.auth-modal-card');
-      if (modalCard) {
-        modalCard.innerHTML = `
-          <div style="text-align:center;padding:2rem;">
-            <div style="width:40px;height:40px;border:3px solid #f3f3f3;border-top:3px solid #000;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1rem;"></div>
-            <p style="color:#555;font-size:0.9rem;">Opening Google Sign-In...</p>
-          </div>
+      const btn = document.querySelector('.gsi-custom-btn');
+      const originalText = btn ? btn.innerHTML : '';
+
+      // Disable button, show loading on button itself (don't destroy modal)
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `
+          <div style="width:16px;height:16px;border:2px solid #f3f3f3;border-top:2px solid #555;border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px;"></div>
+          <span style="color:#555;">Opening Google...</span>
           <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
         `;
       }
 
-      // Small delay to show loading before prompt
-      setTimeout(() => {
-        try {
-          google.accounts.id.prompt((notification) => {
-            const notDisplayed = notification.getNotDisplayedReason && notification.getNotDisplayedReason();
-            const skipped = notification.getSkippedReason && notification.getSkippedReason();
-
-            if (notDisplayed === 'opt_out_or_no_session') {
-              // User needs to enable third-party cookies or sign in to Google
-              this._showAuthError(
-                'Please sign in to your Google account in this browser first, then try again.'
-              );
-            } else if (notDisplayed || skipped) {
-              this._showAuthError(
-                'Sign-in popup was blocked. Please allow popups for this site.'
-              );
-            }
-            // If successful, callback handles it
-          });
-        } catch (e) {
-          console.error('[AUTH] prompt failed:', e);
-          this._showAuthError('Google Sign-In failed. Please try again.');
+      // Safety timeout: re-enable button after 6s if nothing happened
+      const timeoutId = setTimeout(() => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText || `
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.13-.84 2.08-1.78 2.72v2.26h2.88c1.69-1.56 2.66-3.86 2.66-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.88-2.26c-.81.54-1.84.86-3.08.86-2.37 0-4.38-1.6-5.1-3.74H.95v2.33C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.9 10.68c-.18-.54-.29-1.11-.29-1.68s.11-1.14.29-1.68V5H.95C.35 6.19 0 7.55 0 9s.35 2.81.95 4l2.95-2.32z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.95 4.95l2.95 2.33C4.62 5.14 6.63 3.58 9 3.58z"/></svg>
+            Try Again
+          `;
         }
-      }, 300);
+        // Show a subtle error message below the button
+        let err = document.getElementById('gsi-error-msg');
+        if (!err) {
+          err = document.createElement('p');
+          err.id = 'gsi-error-msg';
+          err.style.cssText = 'color:#c00;font-size:0.8rem;text-align:center;margin-top:0.5rem;';
+          if (btn) btn.parentNode.insertBefore(err, btn.nextSibling);
+        }
+        err.textContent = 'Sign-in timed out. Make sure you are signed into Google in this browser, then try again.';
+      }, 6000);
+
+      // Call Google prompt
+      try {
+        google.accounts.id.prompt((notification) => {
+          clearTimeout(timeoutId); // Cancel safety timeout
+
+          // Restore button
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          }
+          // Clear error message
+          const err = document.getElementById('gsi-error-msg');
+          if (err) err.remove();
+
+          // Check if prompt was displayed
+          let reason = null;
+          try {
+            if (notification.isNotDisplayedReason) {
+              reason = notification.getNotDisplayedReason();
+            } else if (notification.getNotDisplayedReason) {
+              reason = notification.getNotDisplayedReason();
+            }
+          } catch (e) { /* ignore */ }
+
+          if (reason === 'opt_out_or_no_session') {
+            this._showAuthError('Please sign into your Google account in this browser first, then try again.');
+          } else if (reason === 'browser_not_supported') {
+            this._showAuthError('Your browser does not support Google Sign-In. Try Chrome or Safari.');
+          } else if (reason) {
+            this._showAuthError('Sign-in was blocked. Check popup settings and try again.');
+          }
+          // If no reason, prompt was shown successfully
+        });
+      } catch (e) {
+        clearTimeout(timeoutId);
+        console.error('[AUTH] prompt failed:', e);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+        this._showAuthError('Google Sign-In failed. Please try again.');
+      }
     },
 
     // ─── Handle Google Credential ─────────────────────────
@@ -233,8 +266,6 @@
             // Check if auth controls now exist
             if (header.querySelector('.auth-nav-controls')) {
               this._updateUI();
-              // Also try to render GSI button if modal exists
-              this._tryRenderGSIButton();
             }
           }
         }
@@ -248,7 +279,6 @@
         attempts++;
         if (header.querySelector('.auth-nav-controls')) {
           this._updateUI();
-          this._tryRenderGSIButton();
           clearInterval(interval);
         }
         if (attempts > 20) clearInterval(interval); // Stop after ~4s
