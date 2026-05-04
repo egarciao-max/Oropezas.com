@@ -83,11 +83,14 @@ function renderGrid(articles) {
 async function loadArticles() {
     try {
         var page = document.body.dataset.page || 'index';
-        var response = await fetch(API_BASE + '/api/articles');
+        var response = await fetch(API_BASE + '/api/articles', { signal: AbortSignal.timeout(8000) });
         var data = await response.json();
         var articles = Array.isArray(data.articles) ? data.articles : [];
 
-        if (!articles.length) return;
+        if (!articles.length) {
+            showNoArticles();
+            return;
+        }
 
         if (page === 'index') {
             renderFeatured(articles[0]);
@@ -97,7 +100,23 @@ async function loadArticles() {
         }
     } catch (error) {
         console.error('Error cargando artículos:', error);
+        showLoadError();
     }
+}
+
+function showNoArticles() {
+    var featured = document.getElementById('featured-container');
+    var grid = document.getElementById('articles-grid');
+    if (featured) featured.innerHTML = '<p style="color:var(--gray-text);padding:2rem;text-align:center;">No hay artículos disponibles.</p>';
+    if (grid) grid.innerHTML = '<p style="color:var(--gray-text);padding:2rem;text-align:center;">No hay artículos disponibles.</p>';
+}
+
+function showLoadError() {
+    var featured = document.getElementById('featured-container');
+    var grid = document.getElementById('articles-grid');
+    var msg = '<p style="color:var(--gray-text);padding:2rem;text-align:center;">⚠️ No se pudieron cargar los artículos. Verifica tu conexión o intenta de nuevo más tarde.</p>';
+    if (featured) featured.innerHTML = msg;
+    if (grid) grid.innerHTML = msg;
 }
 
 document.addEventListener('DOMContentLoaded', loadArticles);
