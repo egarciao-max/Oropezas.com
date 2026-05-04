@@ -212,8 +212,8 @@ async function seedKelownaArticles(env) {
 // ─── MAIN SITE SEED ARTICLES ──────────────────────────────
 const MAIN_SEED_ARTICLES = [
   {
-    id: 'main-seed-may4', title: 'San Luis Potosí Leads Northeast Mexico in Federal Tourism Plan 2030',
-    slug: 'may-the-4th-mexico',
+    id: 'main-seed-may4-2', title: 'San Luis Potosí Leads Northeast Mexico in Federal Tourism Plan 2030',
+    slug: 'slp-tourism-plan-2030',
     excerpt: 'San Luis Potosí has been designated as the lead state for Mexico\'s Northeast region under the Federal Tourism Plan 2030, positioning the state for major tourism infrastructure investment.',
     html: '<p><strong>San Luis Potosí has been selected to lead Mexico\'s Northeast region</strong> under the federal government\'s Tourism Plan 2030, a strategic initiative announced by federal tourism authorities. The designation positions the state to receive priority funding for tourism infrastructure over the next five years.</p><h2>Federal Tourism Plan 2030</h2><p>The plan is part of a broader federal strategy to diversify Mexico\'s tourism economy beyond traditional beach destinations. States designated as regional leaders receive accelerated funding for road improvements, hospitality training programs, and international marketing campaigns.</p><p>San Luis Potosí\'s selection reflects its growing importance as a cultural and historical destination, home to UNESCO World Heritage sites including the historic centre of San Luis Potosí city and the Franciscan missions of the Sierra Gorda.</p><h2>Worldskills Mexico Coming to SLP</h2><p>Separately, San Luis Potosí is preparing to host Worldskills Mexico, a national technical skills competition for young professionals. The four-day event will feature competitions in categories including industrial mechanics, culinary arts, web design, and robotics.</p><p>The competition is expected to draw participants from across Mexico and generate significant economic activity for local hotels and restaurants.</p><h2>Other State Updates</h2><p>The National Electoral Institute has opened registration for citizen participation in the 2027 electoral process. State congress is also conducting technical working sessions on reforms to the Organic Law of the Judicial Branch.</p><p>Meanwhile, concerns continue about Highway 57 on the San Luis Potosí–Matehuala section, where road conditions have drawn attention from both state officials and federal transportation authorities.</p><p><em>Temperatures in San Luis Potosí today are approximately 28°C with clear skies.</em></p>',
     category: 'Noticias', tags: ['tourism', 'economy'],
@@ -2532,3 +2532,4 @@ async function handleAgentDelete(request, env, corsHeaders) {
   }
 }
 // Deploy trigger: 2026-05-04T00:58:38Z
+Z
