@@ -1600,14 +1600,20 @@ Content: ${contexto}`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      max_tokens: 1200,
+      max_tokens: 256,
     });
     return response.response || `I can help you with something related to ${siteName}`;
   } catch (error) {
     console.error('[AI CHAT ERROR]', error);
+    const errMsg = error.message || '';
+    if (errMsg.includes('neuron') || errMsg.includes('quota') || errMsg.includes('limit')) {
+      return isKelowna
+        ? 'AI quota temporarily exceeded. Please try again in a few minutes.'
+        : 'Cuota de IA excedida temporalmente. Intenta de nuevo en unos minutos.';
+    }
     return isKelowna
-      ? `Sorry, error: ${error.message || 'unknown'}`
-      : `Lo siento, error: ${error.message || 'desconocido'}`;
+      ? `Sorry, error: ${errMsg || 'unknown'}`
+      : `Lo siento, error: ${errMsg || 'desconocido'}`;
   }
 }
 
