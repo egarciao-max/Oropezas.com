@@ -1606,6 +1606,23 @@ Content: ${contexto}`;
   } catch (error) {
     console.error('[AI CHAT ERROR]', error);
     const errMsg = error.message || '';
+    // Fallback: search indexed content for keywords
+    const keywords = message.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const lines = contexto.split('\n');
+    const matches = [];
+    for (const line of lines) {
+      const lower = line.toLowerCase();
+      if (keywords.some(k => lower.includes(k))) {
+        matches.push(line);
+        if (matches.length >= 5) break;
+      }
+    }
+    if (matches.length > 0) {
+      const result = matches.join('\n\n');
+      return isKelowna
+        ? `(AI offline - searching content)\n\n${result.substring(0, 1000)}`
+        : `(IA sin cuota - buscando en contenido)\n\n${result.substring(0, 1000)}`;
+    }
     if (errMsg.includes('neuron') || errMsg.includes('quota') || errMsg.includes('limit')) {
       return isKelowna
         ? 'AI quota temporarily exceeded. Please try again in a few minutes.'
