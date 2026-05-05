@@ -1550,7 +1550,7 @@ async function handleChatMessage(message, env, site) {
         contexto += `[Página: ${url}]\n${texto.substring(0, 2000)}\n\n`;
         count++;
       }
-      if (contexto.length > 40000) contexto = contexto.substring(0, 40000);
+      if (contexto.length > 8000) contexto = contexto.substring(0, 8000);
     } catch (e) { console.error('Error parseando contenido:', e); }
   }
 
@@ -1604,9 +1604,10 @@ Content: ${contexto}`;
     });
     return response.response || `I can help you with something related to ${siteName}`;
   } catch (error) {
+    console.error('[AI CHAT ERROR]', error);
     return isKelowna
-      ? 'Sorry, there was an error. Please try again.'
-      : 'Lo siento, hubo un error. Intenta de nuevo.';
+      ? `Sorry, error: ${error.message || 'unknown'}`
+      : `Lo siento, error: ${error.message || 'desconocido'}`;
   }
 }
 
