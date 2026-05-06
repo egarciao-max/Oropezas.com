@@ -6,10 +6,10 @@ function getArticleUrl(article) {
 }
 
 function getImageUrl(article) {
-    if (article.featuredImage) return article.featuredImage;
-    if (article.image) return article.image;
+    if (article.featuredImage && article.featuredImage !== '/LOGO.jpeg') return article.featuredImage;
+    if (article.image && article.image !== '/LOGO.jpeg') return article.image;
     if (article.slug) return `${API_BASE}/api/media/articles/noticias/${article.slug}.jpg`;
-    return 'https://via.placeholder.com/800x450?text=Oropezas.com';
+    return '';
 }
 
 function escapeHtml(value) {
@@ -30,15 +30,18 @@ function renderFeatured(article) {
     var container = document.getElementById('featured-container');
     if (!container || !article) return;
 
+    var imgUrl = getImageUrl(article);
+    var imgHtml = imgUrl
+        ? '<div class="featured-image"><a href="' + getArticleUrl(article) + '">' +
+            '<img src="' + imgUrl + '" alt="' + escapeHtml(article.title) + '"' +
+            ' onerror="this.parentElement.style.display=\'none\'"' +
+            ' style="width:100%;height:100%;object-fit:cover;border-radius:2px;">' +
+          '</a></div>'
+        : '';
+
     container.innerHTML =
         '<article class="featured-article">' +
-            '<div class="featured-image">' +
-                '<a href="' + getArticleUrl(article) + '">' +
-                    '<img src="' + getImageUrl(article) + '" alt="' + escapeHtml(article.title) + '"' +
-                    ' onerror="this.src=\'https://via.placeholder.com/800x450?text=Oropezas.com\'"' +
-                    ' style="width:100%;height:100%;object-fit:cover;border-radius:2px;">' +
-                '</a>' +
-            '</div>' +
+            imgHtml +
             '<div class="featured-content">' +
                 '<span class="news-tag">' + escapeHtml(article.category || 'Noticias') + '</span>' +
                 '<a href="' + getArticleUrl(article) + '" style="text-decoration:none;color:inherit;">' +
@@ -64,14 +67,16 @@ function renderGrid(articles) {
     }
 
     container.innerHTML = articles.map(function(article, index) {
+        var imgUrl = getImageUrl(article);
+        var imgHtml = imgUrl
+            ? '<a href="' + getArticleUrl(article) + '">' +
+                '<img src="' + imgUrl + '" alt="' + escapeHtml(article.title) + '"' +
+                ' onerror="this.parentElement.style.display=\'none\'"' +
+                ' style="width:100%;height:100%;object-fit:cover;">' +
+              '</a>'
+            : '<div style="width:100%;height:100%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;">' + escapeHtml(article.category || 'Noticias') + '</div>';
         return '<article class="news-card" style="animation-delay:' + (0.1 * index) + 's">' +
-            '<div class="news-card-image">' +
-                '<a href="' + getArticleUrl(article) + '">' +
-                    '<img src="' + getImageUrl(article) + '" alt="' + escapeHtml(article.title) + '"' +
-                    ' onerror="this.src=\'https://via.placeholder.com/400x225?text=Oropezas.com\'"' +
-                    ' style="width:100%;height:100%;object-fit:cover;">' +
-                '</a>' +
-            '</div>' +
+            '<div class="news-card-image">' + imgHtml + '</div>' +
             '<h3>' + escapeHtml(article.title) + '</h3>' +
             '<p class="news-card-excerpt">' + escapeHtml(article.excerpt || article.subtitle || '') + '</p>' +
             '<p class="news-card-date">' + formatDate(article.date) + '</p>' +
