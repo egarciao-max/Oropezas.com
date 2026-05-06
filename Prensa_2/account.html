@@ -316,10 +316,10 @@ async function dashPublish() {
     resultEl.className = 'dash-result error';
     resultEl.innerHTML = '<strong>❌ Error de conexión.</strong>';
     resultEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-send"></i> Publicar';
   }
-
-  btn.disabled = false;
-  btn.innerHTML = '<i class="bi bi-send"></i> Publicar';
 }
 
 // ─── SAVE PROFILE ─────────────────────────────────────────────────────────────
@@ -366,15 +366,32 @@ async function renderAccount() {
   if (uid) { loadPublicProfile(uid); return; }
 
   const localUser = OROPEZAS_AUTH.getUser();
-  document.getElementById('public-profile').style.display = 'none';
-  document.getElementById('account-unauthenticated').style.display = 'none';
-  document.getElementById('account-publisher').style.display = 'none';
-  document.getElementById('account-authenticated').style.display = 'none';
 
-  if (!localUser) { document.getElementById('account-unauthenticated').style.display = 'flex'; return; }
+  // Show local data FIRST so page is never blank
+  if (!localUser) {
+    document.getElementById('public-profile').style.display = 'none';
+    document.getElementById('account-unauthenticated').style.display = 'flex';
+    document.getElementById('account-publisher').style.display = 'none';
+    document.getElementById('account-authenticated').style.display = 'none';
+    return;
+  }
 
-  // Always fetch fresh profile from server so role/verified/title are current
-  let user = localUser;
+  // Show local profile immediately while fetching fresh data
+  if (localUser.role === 'ceo' || localUser.role === 'publisher') {
+    document.getElementById('public-profile').style.display = 'none';
+    document.getElementById('account-unauthenticated').style.display = 'none';
+    document.getElementById('account-publisher').style.display = 'block';
+    document.getElementById('account-authenticated').style.display = 'none';
+    renderPublisher(localUser);
+  } else {
+    document.getElementById('public-profile').style.display = 'none';
+    document.getElementById('account-unauthenticated').style.display = 'none';
+    document.getElementById('account-publisher').style.display = 'none';
+    document.getElementById('account-authenticated').style.display = 'block';
+    renderUser(localUser);
+  }
+
+  // Then refresh in background from server
   try {
     const userId = localUser.id || localUser.uid || localUser.sub || '';
     if (userId) {
@@ -382,19 +399,23 @@ async function renderAccount() {
       if (r.ok) {
         const fresh = await r.json();
         if (fresh && fresh.role) {
-          user = { ...localUser, ...fresh, picture: localUser.picture || fresh.picture };
+          const user = { ...localUser, ...fresh, picture: localUser.picture || fresh.picture };
+          // Only re-render if role changed
+          if (user.role !== localUser.role) {
+            if (user.role === 'ceo' || user.role === 'publisher') {
+              document.getElementById('account-publisher').style.display = 'block';
+              document.getElementById('account-authenticated').style.display = 'none';
+              renderPublisher(user);
+            } else {
+              document.getElementById('account-publisher').style.display = 'none';
+              document.getElementById('account-authenticated').style.display = 'block';
+              renderUser(user);
+            }
+          }
         }
       }
     }
-  } catch(e) { /* use localStorage fallback */ }
-
-  if (user.role === 'ceo' || user.role === 'publisher') {
-    document.getElementById('account-publisher').style.display = 'block';
-    renderPublisher(user);
-  } else {
-    document.getElementById('account-authenticated').style.display = 'block';
-    renderUser(user);
-  }
+  } catch(e) { /* keep local profile visible */ }
 }
 
 function renderPublisher(user) {

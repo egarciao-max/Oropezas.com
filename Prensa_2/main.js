@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // ========== PAGE LOAD COMPLETE ANIMATION ==========
     
-    window.addEventListener('load', () => {
+    window.addEventListener('DOMContentLoaded', () => {
         document.body.style.opacity = '1';
     });
 
