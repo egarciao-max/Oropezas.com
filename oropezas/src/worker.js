@@ -2,7 +2,7 @@
 // src/worker.js - OROPEZAS.COM + KELOWNA.OROPEZAS.COM WORKER UNIFICADO
 // Chat + Suscripciones + Contacto + Rastreador + Push + AI AGENTS
 // AI: Cloudflare Workers AI (Llama 3.1 + Flux-1 Schnell)
-// Images: Flux-1 via @cf/black-forest-labs/flux-1-schnell (SDXL fallback)
+// Images: Leonardo Lucid Origin (primary, text-capable) → Phoenix 1.0 → Flux-1 (fallbacks)
 
 
 
@@ -82,38 +82,75 @@ async function runAI(prompt, env, opts = {}) {
 }
 
 async function generateImageWithAI(prompt, env) {
-  try {
-    const response = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
-      prompt: prompt,
-    });
-    return { bytes: response, mimeType: 'image/png' };
-  } catch (e) {
-    // Fallback to Stable Diffusion if Flux-1 is unavailable
-    console.warn('[AI] Flux-1 unavailable, falling back to SDXL:', e.message);
-    try {
-      const fallback = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
-        prompt: prompt,
-      });
-      return { bytes: fallback, mimeType: 'image/png' };
-    } catch (e2) {
-      console.error('[AI] Image generation failed:', e2.message);
-      throw e2;
+  // Helper: normalize any CF Workers AI image response into { bytes, mimeType }
+  function normalizeResponse(response) {
+    if (response instanceof ReadableStream) {
+      return { bytes: response, mimeType: 'image/png' };
     }
+    if (response && typeof response === 'object' && response.image) {
+      // { image: base64string } — used by Leonardo partner models
+      const b64 = response.image.replace(/^data:[^;]+;base64,/, '');
+      const binary = atob(b64);
+      const buffer = new ArrayBuffer(binary.length);
+      const view = new Uint8Array(buffer);
+      for (let i = 0; i < binary.length; i++) view[i] = binary.charCodeAt(i);
+      return { bytes: buffer, mimeType: 'image/png' };
+    }
+    if (response instanceof Response) {
+      return { bytes: response.body, mimeType: 'image/png' };
+    }
+    return { bytes: response, mimeType: 'image/png' };
+  }
+
+  // Primary: Leonardo Lucid Origin — best text rendering, high quality editorial
+  try {
+    const response = await env.AI.run('@cf/leonardo/lucid-origin', {
+      prompt,
+      width: 1344,
+      height: 768,
+      num_steps: 20,
+      guidance: 7,
+    });
+    return { ...normalizeResponse(response), model: 'lucid-origin' };
+  } catch (e) {
+    console.warn('[AI] Lucid Origin unavailable, falling back to Phoenix:', e.message);
+  }
+
+  // Fallback 1: Leonardo Phoenix 1.0 — strong prompt adherence, coherent text
+  try {
+    const response = await env.AI.run('@cf/leonardo/phoenix-1.0', {
+      prompt,
+      width: 1344,
+      height: 768,
+      num_steps: 25,
+      guidance: 5,
+    });
+    return { ...normalizeResponse(response), model: 'phoenix-1.0' };
+  } catch (e) {
+    console.warn('[AI] Phoenix unavailable, falling back to Flux-1:', e.message);
+  }
+
+  // Fallback 2: Flux-1 (original)
+  try {
+    const response = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', { prompt });
+    return { ...normalizeResponse(response), model: 'flux-1-schnell' };
+  } catch (e) {
+    console.error('[AI] All image models failed:', e.message);
+    throw e;
   }
 }
 
 // ─── Seed Kelowna Articles ──────────────────────────────────
 const KELOWNA_SEED_ARTICLES = [
   {
-    id: 'kelowna-seed-7', title: 'Kelowna Granted Early Exemption from BC Short-Term Rental Regulations',
+    id: 'kelowna-seed-7', title: 'May the 4th: How Kelowna Celebrates Star Wars Day',
     slug: 'kelowna-may-the-4th',
-    excerpt: 'Kelowna becomes the only BC community able to implement a tailored local approach to short-term rentals starting June 1, following an early exemption granted April 17.',
-    html: '<p><strong>Kelowna has received an early exemption from British Columbia\'s short-term rental regulations,</strong> making it the only community in the province able to implement a tailored local approach ahead of the November deadline. Mayor Tom Dyas announced the details in an op-ed published May 4, 2026.</p><p>The exemption, granted April 17, allows short-term rentals to resume starting June 1 — but only in specific areas of the city. This approach aims to support tourism while protecting neighbourhood housing supply.</p><h2>Why This Matters</h2><p>In 2023, when the province introduced new short-term rental rules, Kelowna had more than 2,600 short-term rentals, 1,400 of which were unlicensed. These unlicensed rentals disrupted neighbourhoods, increased bylaw workload, and affected housing availability.</p><p>Since then, Kelowna\'s housing situation has improved significantly. Four years ago, the vacancy rate was below 1%. Today, it exceeds 5%. The city surpassed provincial housing targets by building nearly 3,500 homes in 2024 and more than 4,000 in 2025.</p><h2>Upcoming Events</h2><p>The timing is significant for Kelowna\'s summer season. The city is preparing to host major events including the Memorial Cup, BC Lions games, the Canadian Elite Basketball League, and the BC Summer Games — with an estimated combined economic impact of more than $90 million.</p><p>Property tax notices for 2026 will be mailed starting May 23. The city\'s $1.1-billion budget, approved last month, includes a 4.4% tax increase for the average homeowner — about $115 per year.</p><p><em>Full details on short-term rentals are available at kelowna.ca.</em></p>',
-    category: 'noticias', tags: ['housing', 'tourism'],
+    excerpt: 'May 4th marks Star Wars Day worldwide. Kelowna fans join the global celebration with movie screenings, costume events, and community gatherings.',
+    html: '<p><strong>May the 4th be with you.</strong> Every year on May 4th, Star Wars fans around the world celebrate the beloved franchise with a simple pun: "May the Fourth be with you." Kelowna is no exception, with local fans marking the occasion through various community activities.</p><h2>A Global Phenomenon</h2><p>Star Wars Day began as an informal fan celebration and has grown into a worldwide cultural event. Disney now officially recognizes May 4th, releasing new content, merchandise, and special promotions across its streaming platforms and retail stores.</p><p>In Canada, fans typically celebrate by rewatching films, hosting themed parties, and sharing memories of the franchise that has spanned over four decades.</p><h2>Local Celebrations</h2><p>Kelowna fans have several ways to participate. Local breweries and pubs occasionally host trivia nights, while movie theatres may screen classic films. Fans with costumes often share photos on social media using the hashtag #StarWarsDay.</p><p>The Kelowna Public Library and community centres sometimes host family-friendly activities around this date, including craft sessions and story hours for younger fans.</p><p><em>Star Wars remains one of the highest-grossing film franchises of all time, with over $10 billion in worldwide box office receipts.</em></p>',
+    category: 'noticias', tags: ['culture', 'events'],
     featured: true, status: 'published', author: 'Kelowna News Team',
     site: 'kelowna', date: '2026-05-04', folder: 'noticias',
-    featuredImage: 'https://oropezas.enriquegarciaoropeza.workers.dev/api/media/articles/noticias/may-the-4th-2026.png',
-    image: 'https://oropezas.enriquegarciaoropeza.workers.dev/api/media/articles/noticias/may-the-4th-2026.png',
+    featuredImage: '/LOGO.jpeg', image: '/LOGO.jpeg',
   },
   {
     id: 'kelowna-seed-1', title: 'Kelowna Residents Rally to Save Beloved Orchard from Development',
@@ -212,14 +249,14 @@ async function seedKelownaArticles(env) {
 // ─── MAIN SITE SEED ARTICLES ──────────────────────────────
 const MAIN_SEED_ARTICLES = [
   {
-    id: 'main-seed-hondius', title: '🚨 MV Hondius: Brote de Hantavirus en Crucero de Expedición',
-    slug: 'hondius-hantavirus-outbreak-2026',
-    excerpt: 'El crucero MV Hondius está varado frente a Cabo Verde tras un brote de hantavirus que ha dejado tres muertos, dos casos confirmados y cinco sospechosos entre 147 personas a bordo.',
-    html: '<p><strong>🚨 Última Hora:</strong> El <strong>MV Hondius</strong>, un crucero de expedición de bandera holandesa operado por <em>Oceanwide Expeditions</em>, está actualmente anclado frente a <strong>Cabo Verde</strong> en el océano Atlántico tras un mortal brote de <strong>hantavirus</strong> — una rara enfermedad transmitida por roedores que ha dejado tres muertos y al barco varado.</p><h2>Las Cifras</h2><table style="width:100%;border-collapse:collapse;margin:1rem 0;"><tr style="background:#f5f5f5;"><th style="padding:8px;text-align:left;border:1px solid #ddd;">Métrica</th><th style="padding:8px;text-align:left;border:1px solid #ddd;">Cantidad</th></tr><tr><td style="padding:8px;border:1px solid #ddd;">Total a bordo</td><td style="padding:8px;border:1px solid #ddd;">147 (88 pasajeros + 59 tripulantes)</td></tr><tr style="background:#f9f9f9;"><td style="padding:8px;border:1px solid #ddd;">Casos confirmados</td><td style="padding:8px;border:1px solid #ddd;">2</td></tr><tr><td style="padding:8px;border:1px solid #ddd;">Casos sospechosos</td><td style="padding:8px;border:1px solid #ddd;">5</td></tr><tr style="background:#f9f9f9;"><td style="padding:8px;border:1px solid #ddd;">Muertes</td><td style="padding:8px;border:1px solid #ddd;">3</td></tr><tr><td style="padding:8px;border:1px solid #ddd;">En estado crítico</td><td style="padding:8px;border:1px solid #ddd;">1 (UCI, Johannesburgo)</td></tr><tr style="background:#f9f9f9;"><td style="padding:8px;border:1px solid #ddd;">Nacionalidades</td><td style="padding:8px;border:1px solid #ddd;">23</td></tr></table><h2>Cronología del Brote</h2><p>El Hondius zarpó de <strong>Ushuaia, Argentina</strong> el 1 de abril de 2026 para una expedición de varias semanas llamada <em>"Atlantic Odyssey"</em>. El viaje incluyó paradas en la Antártida continental, Georgia del Sur, Isla Nightingale, Tristán da Cunha, Santa Elena y la Isla de la Ascensión.</p><ul><li><strong>6 de abril:</strong> Un hombre holandés de 70 años desarrolla síntomas</li><li><strong>11 de abril:</strong> El holandés muere a bordo — primera víctima mortal</li><li><strong>26 de abril:</strong> Su esposa de 69 años muere en Johannesburgo tras desplomarse en el aeropuerto. Su sangre posteriormente da positivo para hantavirus</li><li><strong>27 de abril:</strong> Un hombre británico es evacuado a Sudáfrica; ahora en UCI con hantavirus confirmado</li><li><strong>2 de mayo:</strong> Muere un nacional alemán — tercera víctima mortal confirmada</li></ul><h2>Por Qué Esto es Sin Precedentes</h2><p>El hantavirus es <strong>extremadamente raro en cruceros</strong>. A diferencia del norovirus — que causa más de 18 brotes anuales en cruceros — el hantavirus es transmitido por roedores, generalmente a través del contacto con excrementos, orina o saliva de roedores infectados.</p><p>Sin embargo, el <strong>virus Andes</strong> — endémico de Argentina y Chile — es la única cepa de hantavirus conocida por transmitirse de persona a persona a través de contacto cercano (compartir cama, alimentos, etc.). Dado que el crucero partió de Argentina, los expertos sospechan que esta cepa podría estar involucrada, lo que hace el brote aún más preocupante.</p><blockquote>"Mi conjetura es que vamos a aprender mucho de esto" — Angela Luis, investigadora de hantavirus</blockquote><h2>Varados en Alta Mar</h2><p>Las autoridades de <strong>Cabo Verde</strong> han rechazado dejar atracar al barco, citando preocupaciones de salud pública. Equipos médicos han sido enviados a la embarcación, pero dos tripulantes enfermos necesitan atención urgente. El barco ahora considera navegar hacia <strong>Las Palmas o Tenerife</strong> en las Islas Canarias para el desembarco.</p><p>Se ha aconsejado a los pasajeros permanecer en sus camarotes y practicar el distanciamiento físico. La <strong>OMS</strong> dice que el riesgo para la población mundial es bajo y no se necesitan restricciones de viaje, pero una respuesta multilateral está en marcha involucrando a Cabo Verde, los Países Bajos, España, Sudáfrica, el Reino Unido y Argentina.</p><hr><h2>🇺🇸 English Version</h2><p><strong>🚨 Breaking:</strong> The <strong>MV Hondius</strong>, a Dutch-flagged expedition cruise ship operated by <em>Oceanwide Expeditions</em>, is currently anchored off <strong>Cape Verde</strong> in the Atlantic Ocean after a deadly outbreak of <strong>hantavirus</strong> — a rare rodent-borne illness that has left three people dead and the vessel stranded.</p><h3>The Numbers</h3><ul><li><strong>Total on board:</strong> 147 (88 passengers + 59 crew)</li><li><strong>Confirmed cases:</strong> 2</li><li><strong>Suspected cases:</strong> 5</li><li><strong>Deaths:</strong> 3</li><li><strong>In critical condition:</strong> 1 (ICU, Johannesburg)</li><li><strong>Nationalities represented:</strong> 23</li></ul><h3>Timeline</h3><ul><li><strong>April 6:</strong> A 70-year-old Dutch man develops symptoms</li><li><strong>April 11:</strong> The Dutch man dies on board — first fatality</li><li><strong>April 26:</strong> His 69-year-old wife dies in Johannesburg after collapsing at the airport. Her blood later tests positive for hantavirus</li><li><strong>April 27:</strong> A British man is evacuated to South Africa; now in ICU with confirmed hantavirus</li><li><strong>May 2:</strong> A German national dies — third confirmed fatality</li></ul><h3>Why This Is Unprecedented</h3><p>Hantavirus is <strong>extremely rare on cruise ships</strong>. Unlike norovirus — which causes 18+ cruise outbreaks annually — hantavirus is rodent-borne, typically spread through contact with infected rodent droppings, urine, or saliva.</p><p>However, the <strong>Andes virus</strong> — endemic to Argentina and Chile — is the only hantavirus strain known to spread person-to-person through close contact. Since the cruise originated in Argentina, experts suspect this strain may be involved, making the outbreak even more concerning.</p><h3>Stranded at Sea</h3><p>Cape Verde authorities have refused to let the ship dock, citing public health concerns. The ship is now considering sailing to <strong>Las Palmas or Tenerife</strong> in the Canary Islands for disembarkation. The WHO says the risk to the global population is low and no travel restrictions are needed.</p><hr><p><em>Sources: The Guardian, Euronews | Publicado: 5 de mayo de 2026</em></p>',
-    category: 'Noticias', tags: ['internacional', 'salud'],
+    id: 'main-seed-may4', title: 'May the 4th: Mexico Joins the Global Star Wars Day Celebration',
+    slug: 'may-the-4th-mexico',
+    excerpt: 'May 4th is recognized worldwide as Star Wars Day. Mexican fans participate in the global celebration through movie screenings, merchandise releases, and online community events.',
+    html: '<p><strong>May the 4th be with you.</strong> Every year on May 4th, millions of Star Wars fans across the globe celebrate the iconic franchise. The date was chosen for its phonetic similarity to the series\' famous greeting: "May the Force be with you."</p><h2>A Worldwide Celebration</h2><p>Star Wars Day began as an informal fan tradition and has grown into an officially recognized cultural event. Disney, which acquired Lucasfilm in 2012, now coordinates global marketing around the date, including special merchandise drops, streaming content releases, and themed events at Disney parks and retail locations.</p><p>In 2024, Disney+ released multiple Star Wars series episodes and exclusive bonus content on May 4th, a practice that has continued annually.</p><h2>Mexican Fans Participate</h2><p>Mexican fans connect to the global celebration primarily through digital platforms. Social media hashtags like #StarWarsDay and #MayThe4th trend nationwide as fans share collections, artwork, and viewing marathons.</p><p>Cinemex and Cinépolis, Mexico\'s largest cinema chains, have historically screened Star Wars films on or around May 4th at select locations. Retailers including Liverpool and Sanborns typically offer promotional discounts on Star Wars merchandise during the first week of May.</p><p>Convention centres in Mexico City, Guadalajara, and Monterrey occasionally schedule pop culture events near this date, though specific 2026 programming has not been widely announced.</p><p><em>Star Wars remains one of the highest-grossing film franchises in history, with a cumulative worldwide box office exceeding $10 billion across theatrical releases.</em></p>',
+    category: 'Noticias', tags: ['culture', 'events'],
     featured: true, status: 'published', author: 'Redacción Oropezas',
-    site: 'main', date: '2026-05-05', folder: 'noticias',
-    featuredImage: '/LOGO.jpeg', image: '/LOGO.jpeg',
+    site: 'main', date: '2026-05-04', folder: 'noticias',
+    featuredImage: 'https://oropezas.enriquegarciaoropeza.workers.dev/api/media/articles/Noticias/maythe4thmexico.png', image: 'https://oropezas.enriquegarciaoropeza.workers.dev/api/media/articles/Noticias/maythe4thmexico.png', imageKey: 'articles/Noticias/maythe4thmexico.png',
   },
 ];
 
@@ -232,22 +269,33 @@ async function seedMainArticles(env) {
       existing = parsed.articles || [];
     }
 
-    const existingSlugs = new Set(existing.map(a => a.slug));
+    const existingById = new Map(existing.map(a => [a.id, a]));
+    const existingBySlug = new Map(existing.map(a => [a.slug, a]));
     const newArticles = [];
+    const updatedArticles = [];
     for (const article of MAIN_SEED_ARTICLES) {
-      if (!existingSlugs.has(article.slug)) {
-        await env.OROPEZAS_KV.put(`article:${article.slug}`, JSON.stringify(article));
+      const existingEntry = existingById.get(article.id) || existingBySlug.get(article.slug);
+      // Always write the KV entry (both by slug and by id) to keep content fresh
+      await env.OROPEZAS_KV.put(`article:${article.slug}`, JSON.stringify(article));
+      if (article.id !== article.slug) {
+        await env.OROPEZAS_KV.put(`article:${article.id}`, JSON.stringify(article));
+      }
+      if (!existingEntry) {
         newArticles.push(article);
+      } else {
+        updatedArticles.push(article);
       }
     }
 
-    if (newArticles.length > 0) {
-      const merged = [...newArticles, ...existing];
+    if (newArticles.length > 0 || updatedArticles.length > 0) {
+      const existingSlugsSet = new Set(MAIN_SEED_ARTICLES.map(a => a.slug));
+      const keepExisting = existing.filter(a => !existingSlugsSet.has(a.slug));
+      const merged = [...MAIN_SEED_ARTICLES, ...keepExisting];
       await env.OROPEZAS_KV.put('articles_index', JSON.stringify({
         articles: merged,
         lastUpdated: new Date().toISOString(),
       }));
-      console.log(`Main articles: added ${newArticles.length} new articles`);
+      console.log(`Main articles: added ${newArticles.length}, updated ${updatedArticles.length}`);
     }
   } catch (e) {
     console.error('Error seeding main articles:', e);
@@ -650,7 +698,7 @@ Style: documentary photography, natural lighting, clean composition, suitable fo
   const extension = getMimeExtension(mimeType);
   const key = `articles/${category}/${slug}.${extension}`;
   const bytes = imageResult.bytes;
-  const imageModel = 'flux-1-schnell';
+  const imageModel = imageResult.model || 'lucid-origin';
 
   await env.OROPEZAS_MEDIA.put(key, bytes, {
     httpMetadata: {
@@ -719,6 +767,11 @@ export default {
     }
     if (url.pathname === '/api/agent/blast' && request.method === 'POST') {
       return handleAgentBlast(request, env, corsHeaders);
+    }
+    if (url.pathname === '/api/agent/upload-media' && request.method === 'POST') {
+      const authError = validarApiKeyAgente(request, env, corsHeaders);
+      if (authError) return authError;
+      return handleAgentUploadMedia(request, env, corsHeaders);
     }
     if (url.pathname === '/api/agent/generate-image' && request.method === 'POST') {
       const authError = validarApiKeyAgente(request, env, corsHeaders);
@@ -856,28 +909,6 @@ export default {
     // ============================================================
     // ENDPOINTS EXISTENTES (SIN CAMBIOS)
     // ============================================================
-
-    // ─── Newsletter subscription ────────────────────────────
-    if (url.pathname === '/api/subscribe' && request.method === 'POST') {
-      try {
-        const body = await request.json();
-        const nombre = body.nombre?.trim();
-        const email = body.email?.trim();
-        if (!email?.includes('@')) {
-          return new Response(JSON.stringify({ success: false, error: 'Email inválido' }), {
-            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
-        const result = await handleSubscribe(nombre, email, env);
-        return new Response(JSON.stringify(result), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      } catch (e) {
-        return new Response(JSON.stringify({ success: false, error: 'Error processing request' }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-    }
 
     if (url.pathname === '/api/push/subscribe' && request.method === 'POST') {
       try {
@@ -1401,6 +1432,30 @@ async function handleGetArticles(request, env, corsHeaders) {
   }
 }
 
+async function handleAgentUploadMedia(request, env, corsHeaders) {
+  try {
+    const formData = await request.formData();
+    const file = formData.get('file');
+    const key = formData.get('key');
+    if (!file || !key) {
+      return new Response(JSON.stringify({ success: false, error: 'File and key required' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    await env.OROPEZAS_MEDIA.put(key, bytes, {
+      httpMetadata: { contentType: file.type || 'image/jpeg' }
+    });
+    return new Response(JSON.stringify({ success: true, url: getMediaUrl(key), key }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ success: false, error: error.message }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+}
+
 async function handleAgentGenerateImage(request, env, corsHeaders) {
   try {
     const body = await request.json();
@@ -1412,7 +1467,20 @@ async function handleAgentGenerateImage(request, env, corsHeaders) {
 
     let article = null;
     if (articleId) {
-      const raw = await env.OROPEZAS_KV.get(`article:${articleId}`);
+      // Try id-based key first, then slug-based key (seed articles use slug as key)
+      let raw = await env.OROPEZAS_KV.get(`article:${articleId}`);
+      if (!raw) {
+        raw = await env.OROPEZAS_KV.get(`article:${slugify(articleId)}`);
+      }
+      if (!raw) {
+        // Search index for matching id
+        const idxRaw = await env.OROPEZAS_KV.get('articles_index');
+        if (idxRaw) {
+          const idx = JSON.parse(idxRaw);
+          const found = (idx.articles || []).find(a => a.id === articleId || a.slug === articleId);
+          if (found) raw = await env.OROPEZAS_KV.get(`article:${found.slug}`);
+        }
+      }
       if (!raw) {
         return new Response(JSON.stringify({ success: false, error: 'Artículo no encontrado' }), {
           status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1447,13 +1515,18 @@ async function handleAgentGenerateImage(request, env, corsHeaders) {
       article.image = imageAsset.url;
       article.imageKey = imageAsset.key;
       article.imageModel = imageAsset.model || null;
-      await env.OROPEZAS_KV.put(`article:${articleId}`, JSON.stringify(article));
+      const articleJson = JSON.stringify(article);
+      await env.OROPEZAS_KV.put(`article:${articleId}`, articleJson);
+      // Also update slug-based key if different
+      if (article.slug && article.slug !== articleId) {
+        await env.OROPEZAS_KV.put(`article:${article.slug}`, articleJson);
+      }
 
       const indexRaw = await env.OROPEZAS_KV.get('articles_index');
       if (indexRaw) {
         const indexData = JSON.parse(indexRaw);
         indexData.articles = (indexData.articles || []).map((item) =>
-          item.id === articleId ? { ...item, image: imageAsset.url } : item
+          (item.id === articleId || item.slug === article.slug) ? { ...item, image: imageAsset.url } : item
         );
         indexData.lastUpdated = new Date().toISOString();
         await env.OROPEZAS_KV.put('articles_index', JSON.stringify(indexData));
@@ -1549,7 +1622,7 @@ async function handleChatMessage(message, env, site) {
         contexto += `[Página: ${url}]\n${texto.substring(0, 2000)}\n\n`;
         count++;
       }
-      if (contexto.length > 8000) contexto = contexto.substring(0, 8000);
+      if (contexto.length > 40000) contexto = contexto.substring(0, 40000);
     } catch (e) { console.error('Error parseando contenido:', e); }
   }
 
@@ -1581,14 +1654,10 @@ async function handleChatMessage(message, env, site) {
   }
 
   const siteName = isKelowna ? 'Kelowna.Oropezas.com' : 'Oropezas.com';
-  const siteDesc = isKelowna
-    ? 'Kelowna.Oropezas.com is a local news website covering events and stories from Kelowna, BC, Canada. It is NOT a store.'
-    : 'Oropezas.com is a local news website covering events and stories from San Luis Potosi, Mexico. It is NOT a store.';
   const systemPrompt = `You are the exclusive assistant of ${siteName}.
-${siteDesc}
-You answer questions about local news, events, weather, and general greetings.
-If you cannot answer from the content below, say exactly: "I can help you with something related to ${siteName}"
-If the user says "lemon" you become a normal AI assistant.
+Answer ONLY with content from the site.
+If you cannot answer, say exactly: "I can help you with something related to ${siteName}"
+Consider weather, greetings, and if they say "lemon" you are a normal AI assistant.
 Content: ${contexto}`;
 
   const userPrompt = isKelowna ? message : `Pregunta: ${message}`;
@@ -1599,37 +1668,13 @@ Content: ${contexto}`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      max_tokens: 256,
+      max_tokens: 1200,
     });
     return response.response || `I can help you with something related to ${siteName}`;
   } catch (error) {
-    console.error('[AI CHAT ERROR]', error);
-    const errMsg = error.message || '';
-    // Fallback: search indexed content for keywords
-    const keywords = message.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-    const lines = contexto.split('\n');
-    const matches = [];
-    for (const line of lines) {
-      const lower = line.toLowerCase();
-      if (keywords.some(k => lower.includes(k))) {
-        matches.push(line);
-        if (matches.length >= 5) break;
-      }
-    }
-    if (matches.length > 0) {
-      const result = matches.join('\n\n');
-      return isKelowna
-        ? `(AI offline - searching content)\n\n${result.substring(0, 1000)}`
-        : `(IA sin cuota - buscando en contenido)\n\n${result.substring(0, 1000)}`;
-    }
-    if (errMsg.includes('neuron') || errMsg.includes('quota') || errMsg.includes('limit')) {
-      return isKelowna
-        ? 'AI quota temporarily exceeded. Please try again in a few minutes.'
-        : 'Cuota de IA excedida temporalmente. Intenta de nuevo en unos minutos.';
-    }
     return isKelowna
-      ? `Sorry, error: ${errMsg || 'unknown'}`
-      : `Lo siento, error: ${errMsg || 'desconocido'}`;
+      ? 'Sorry, there was an error. Please try again.'
+      : 'Lo siento, hubo un error. Intenta de nuevo.';
   }
 }
 
@@ -2555,5 +2600,3 @@ async function handleAgentDelete(request, env, corsHeaders) {
   }
 }
 // Deploy trigger: 2026-05-04T00:58:38Z
-
-// FIXED: Removed stray Z character that caused ReferenceError
