@@ -917,15 +917,63 @@ export default {
     if (url.pathname === '/api/create-article' && request.method === 'POST') {
       try {
         const data = await request.json();
-        const { title, content, slug, category = 'noticias', date = new Date().toISOString() } = data;
-        if (!title || !content || !slug) {
-          return new Response(JSON.stringify({ ok: false, error: 'Missing fields' }), {
+        const { title, content, slug, category = 'noticias', date = new Date().toISOString().split('T')[0], html, excerpt, image, featuredImage, author = 'Redacción Oropezas', site = 'main' } = data;
+        if (!title || !slug) {
+          return new Response(JSON.stringify({ ok: false, error: 'Missing title or slug' }), {
             status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
+
+        // Build article object with proper format
+        const articleId = 'article-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        const article = {
+          id: articleId,
+          title,
+          slug,
+          excerpt: excerpt || title,
+          html: html || (typeof content === 'string' ? `<p>${content}</p>` : ''),
+          content: Array.isArray(content) ? content : (html ? [{html}] : []),
+          category,
+          date,
+          author,
+          site,
+          status: 'published',
+          featuredImage: image || featuredImage || '',
+          image: image || featuredImage || '',
+        };
+
+        // Save to KV
+        await env.OROPEZAS_KV.put(`article:${articleId}`, JSON.stringify(article));
+        await env.OROPEZAS_KV.put(`article:${slug}`, JSON.stringify(article));
+
+        // Update index
+        let indexRaw = await env.OROPEZAS_KV.get('articles_index');
+        let indexData = indexRaw ? JSON.parse(indexRaw) : { articles: [] };
+        if (!Array.isArray(indexData.articles)) indexData.articles = [];
+        
+        // Remove existing entry with same slug
+        indexData.articles = indexData.articles.filter(a => a.slug !== slug);
+        
+        // Add new entry
+        indexData.articles.unshift({
+          id: articleId,
+          title,
+          excerpt: article.excerpt,
+          category,
+          date,
+          image: article.image,
+          url: `article.html?slug=${slug}`,
+          slug,
+          author,
+          status: 'published',
+          site,
+        });
+        
+        await env.OROPEZAS_KV.put('articles_index', JSON.stringify(indexData));
+
         return new Response(JSON.stringify({
-          ok: true, message: 'Artículo recibido',
-          article: { title, content, slug, category, date }
+          ok: true, message: 'Artículo guardado',
+          article: { title, slug, category, date }
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch (err) {
         return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON', details: String(err) }), {
