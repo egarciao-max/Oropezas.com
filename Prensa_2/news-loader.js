@@ -112,7 +112,11 @@ function showLoadError() {
     if (grid) grid.innerHTML = msg;
 }
 
-document.addEventListener('DOMContentLoaded', loadArticles);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadArticles);
+} else {
+    loadArticles();
+}
 
 // ─── EMBEDDED FALLBACK ARTICLES (works offline) ───
 const EMBEDDED_ARTICLES = [
