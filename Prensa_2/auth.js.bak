@@ -1,6 +1,7 @@
 // ============================================================
 // OROPEZAS AUTH 4.0 — Google Identity + TokenClient Popup
-// Debug overlay added — shows step-by-step progress on page
+// Fixes: Uses popup-based OAuth (works with 3P cookies blocked)
+//        Fallback to renderButton() for older browsers
 // ============================================================
 
 (function () {
@@ -9,22 +10,6 @@
   const API  = 'https://oropezas.enriquegarciaoropeza.workers.dev';
   const GOOGLE_CLIENT_ID = '233406003665-phh7pcmg6gr23fdlsfjb5db90avi9vrb.apps.googleusercontent.com';
   const LS_USER_KEY = 'oropezas_user_v3';
-
-  // ─── VISIBLE DEBUG OVERLAY ─────────────────────────────
-  function debugLog(msg) {
-    console.log('[AUTH]', msg);
-    var el = document.getElementById('auth-debug-overlay');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'auth-debug-overlay';
-      el.style.cssText = 'position:fixed;bottom:70px;right:10px;width:320px;max-height:250px;overflow-y:auto;background:rgba(0,0,0,0.92);color:#0f0;font-family:monospace;font-size:11px;padding:8px;border-radius:4px;z-index:99999;border:1px solid #0f0;box-shadow:0 0 10px rgba(0,255,0,0.3);';
-      document.body.appendChild(el);
-    }
-    var line = document.createElement('div');
-    line.textContent = new Date().toLocaleTimeString() + ' > ' + msg;
-    el.appendChild(line);
-    el.scrollTop = el.scrollHeight;
-  }
 
   const OROPEZAS_AUTH = window.OROPEZAS_AUTH = {
     currentUser: null,
@@ -35,11 +20,8 @@
     init() {
       if (this.initialized) return;
       this.initialized = true;
-      debugLog('Auth init started');
 
       this.currentUser = this._loadUser();
-      debugLog('Loaded user: ' + (this.currentUser ? this.currentUser.email : 'none'));
-
       this._loadGSIScript();
       this._watchNavbarDynamic();
       this._updateUI();
@@ -52,37 +34,33 @@
     // ─── Load Google Identity Services Script ─────────────
     _loadGSIScript() {
       if (window.google?.accounts?.oauth2 || window.google?.accounts?.id) {
-        debugLog('GSI already loaded');
         this._setupGSI();
         return;
       }
       if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
-        debugLog('GSI script tag exists, waiting...');
         const check = setInterval(() => {
           if (window.google?.accounts?.oauth2 || window.google?.accounts?.id) {
             clearInterval(check);
-            debugLog('GSI loaded via interval');
             this._setupGSI();
           }
         }, 100);
         setTimeout(() => clearInterval(check), 5000);
         return;
       }
-      debugLog('Loading GSI script...');
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
-      script.onload = () => { debugLog('GSI script onload'); this._setupGSI(); };
-      script.onerror = () => { debugLog('GSI script FAILED'); };
+      script.onload = () => this._setupGSI();
+      script.onerror = () => console.error('[AUTH] Failed to load Google Identity Services');
       document.head.appendChild(script);
     },
 
     // ─── Google Sign-In Setup ───────────────────────────────
     _setupGSI() {
-      if (!window.google?.accounts) { debugLog('GSI not available'); return; }
-      debugLog('Setting up GSI...');
+      if (!window.google?.accounts) return;
 
+      // Setup GIS callback (for renderButton fallback)
       if (google.accounts.id) {
         google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
@@ -90,43 +68,42 @@
           auto_select: false,
           cancel_on_tap_outside: true,
         });
-        debugLog('GIS initialize done');
       }
 
+      // Setup TokenClient (primary method — popup, works with 3P cookies blocked)
       if (google.accounts?.oauth2) {
         try {
           this.tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: GOOGLE_CLIENT_ID,
             scope: 'openid email profile',
-            callback: (tokenResponse) => {
-              debugLog('TokenClient callback fired!');
-              this._handleTokenResponse(tokenResponse);
-            },
+            callback: (tokenResponse) => this._handleTokenResponse(tokenResponse),
             error_callback: (err) => {
-              debugLog('TokenClient ERROR: ' + JSON.stringify(err));
-              this._showAuthError('Sign-in failed. Try again.');
+              console.error('[AUTH] TokenClient error:', err);
+              this._showAuthError('Sign-in was cancelled or failed. Please try again.');
             },
           });
-          debugLog('TokenClient created');
         } catch (e) {
-          debugLog('TokenClient init failed: ' + e.message);
+          console.error('[AUTH] TokenClient init failed:', e);
         }
       }
     },
 
     // ─── PRIMARY: TokenClient Popup Sign-In ────────────────
     _startGoogleSignIn() {
-      debugLog('Start sign-in clicked');
+      // Hard timeout: if nothing happens in 6s, show error
+      // (iOS Safari can silently fail when not signed into Google)
       this._signInStartTime = Date.now();
       this._signInTimeout = setTimeout(() => {
-        debugLog('Sign-in timed out after 6s');
-        this._showAuthError('Sign-in could not complete. Make sure you are signed into Google in this browser, then try again.');
+        console.error('[AUTH] Sign-in silently failed after 6s (iOS Safari?)');
+        this._showAuthErrorWithCancel(
+          'Sign-in could not complete. Make sure you are signed into Google in Safari settings, or try a different browser.'
+        );
       }, 6000);
 
       if (this.tokenClient) {
         try {
-          debugLog('Calling requestAccessToken...');
           this.tokenClient.requestAccessToken({ prompt: 'consent' });
+          // Show loading state
           const modalCard = document.querySelector('.auth-modal-card');
           if (modalCard) {
             modalCard.innerHTML = `
@@ -140,29 +117,50 @@
           }
           return;
         } catch (e) {
-          debugLog('requestAccessToken failed: ' + e.message);
+          console.error('[AUTH] TokenClient requestAccessToken failed:', e);
           clearTimeout(this._signInTimeout);
           this._showAuthError('Sign-in failed to start. Please try again.');
         }
       } else {
-        debugLog('No tokenClient, using renderButton fallback');
+        // TokenClient not available — use renderButton fallback
         clearTimeout(this._signInTimeout);
         this._renderGSIButton();
+      }
+    },
+
+    // ─── Show auth error with cancel button ─────────────────
+    _showAuthErrorWithCancel(msg) {
+      clearTimeout(this._signInTimeout);
+      const modalCard = document.querySelector('.auth-modal-card');
+      if (modalCard) {
+        modalCard.innerHTML = `
+          <button class="auth-modal-close" onclick="OROPEZAS_AUTH.closeLoginModal()">&times;</button>
+          <div class="auth-modal-logo"><img src="/LOGO.jpeg" alt="Logo" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:1.5rem;font-weight:900;>OROPEZAS</span>';"></div>
+          <p class="auth-modal-title">Sign In</p>
+          <div style="background:#fee;color:#c00;padding:0.75rem 1rem;border-radius:4px;margin-bottom:1rem;font-size:0.85rem;">
+            &#9888; ${msg}
+          </div>
+          <button id="gsi-fallback-btn" onclick="OROPEZAS_AUTH._startGoogleSignIn()" style="display:flex;width:100%;padding:12px 16px;background:#fff;border:1px solid #dadce0;border-radius:4px;color:#3c4043;font-size:14px;font-weight:500;cursor:pointer;align-items:center;justify-content:center;gap:10px;margin:1rem 0;transition:box-shadow 0.2s,background 0.2s;" onmouseover="this.style.boxShadow='0 1px 2px rgba(60,64,67,0.3),0 1px 3px rgba(60,64,67,0.15)';this.style.background='#f8f9fa';" onmouseout="this.style.boxShadow='none';this.style.background='#fff';">
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.13-.84 2.08-1.78 2.72v2.26h2.88c1.69-1.56 2.66-3.86 2.66-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.88-2.26c-.81.54-1.84.86-3.08.86-2.37 0-4.38-1.6-5.1-3.74H.95v2.33C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.9 10.68c-.18-.54-.29-1.11-.29-1.68s.11-1.14.29-1.68V5H.95C.35 6.19 0 7.55 0 9s.35 2.81.95 4l2.95-2.32z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.95 4.95l2.95 2.33C4.62 5.14 6.63 3.58 9 3.58z"/></svg>
+            Try Again
+          </button>
+          <div id="gsi-button-container" style="display:none;"></div>
+          <p class="auth-modal-terms">By signing in, you agree to our <a href="/terminos.html">Terms of Use</a> and <a href="/privacidad.html">Privacy Policy</a>.</p>
+        `;
       }
     },
 
     // ─── Handle TokenClient Response ──────────────────────
     async _handleTokenResponse(tokenResponse) {
       clearTimeout(this._signInTimeout);
-      debugLog('TokenClient callback: ' + JSON.stringify({has_access_token: !!tokenResponse?.access_token, error: tokenResponse?.error}));
-
+      console.log('[AUTH] TokenClient callback fired:', tokenResponse);
       if (!tokenResponse?.access_token) {
-        debugLog('No access_token in response');
+        console.error('[AUTH] No access_token in response:', tokenResponse);
         this._showAuthError('No access token received from Google. Please try again.');
         return;
       }
 
-      debugLog('Got access token, verifying with backend...');
+      console.log('[AUTH] Got access token, calling backend...');
       const modalCard = document.querySelector('.auth-modal-card');
       if (modalCard) {
         modalCard.innerHTML = `
@@ -175,15 +173,15 @@
       }
 
       const safetyTimeout = setTimeout(() => {
-        debugLog('Backend verification timed out after 12s');
+        console.error('[AUTH] Backend verification timed out after 12s');
         this._showAuthError('Sign-in verification timed out. Please try again.');
       }, 12000);
 
       try {
         const controller = new AbortController();
         const fetchTimeout = setTimeout(() => controller.abort(), 10000);
-        debugLog('POST /api/auth/google...');
 
+        console.log('[AUTH] POST /api/auth/google with accessToken');
         const res = await fetch(API + '/api/auth/google', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -193,9 +191,8 @@
         clearTimeout(fetchTimeout);
         clearTimeout(safetyTimeout);
 
-        debugLog('Backend responded: ' + res.status);
         const data = await res.json();
-        debugLog('Backend data: ' + JSON.stringify({success: data.success, has_user: !!data.user, error: data.error}));
+        console.log('[AUTH] Backend response:', data);
 
         if (data.success && data.user) {
           const user = data.user;
@@ -204,16 +201,16 @@
 
           this.currentUser = user;
           this._saveUser(user);
-          debugLog('Sign-in complete for: ' + (user.name || user.email));
+          console.log('[AUTH] Sign-in complete for:', user.name || user.email);
           this.closeLoginModal();
           this._updateUI();
         } else {
-          debugLog('Backend rejected: ' + (data.error || 'unknown'));
+          console.error('[AUTH] Backend rejected token:', data.error);
           this._showAuthError(data.error || 'Authentication failed. Please try again.');
         }
       } catch (err) {
         clearTimeout(safetyTimeout);
-        debugLog('Error: ' + (err.name + ': ' + err.message));
+        console.error('[AUTH] Error verifying token:', err);
         if (err.name === 'AbortError') {
           this._showAuthError('Sign-in timed out. Please check your connection and try again.');
         } else {
@@ -225,9 +222,8 @@
     // ─── Handle Google Credential (renderButton fallback) ─
     async _handleGoogleCredential(response) {
       clearTimeout(this._signInTimeout);
-      debugLog('GIS credential callback fired');
       if (!response?.credential) {
-        debugLog('No credential in Google response');
+        console.error('[AUTH] No credential in Google response');
         return;
       }
 
@@ -237,20 +233,21 @@
           <div style="text-align:center;padding:2rem;" id="auth-signing-in">
             <div style="width:40px;height:40px;border:3px solid #f3f3f3;border-top:3px solid #000;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1rem;"></div>
             <p style="color:#555;font-size:0.9rem;">Signing in...</p>
+            <p style="color:#888;font-size:0.75rem;margin-top:0.5rem;">This may take a few seconds</p>
           </div>
           <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
         `;
       }
 
+      // 12-second safety timeout
       const safetyTimeout = setTimeout(() => {
-        debugLog('Sign-in timed out after 12s');
+        console.error('[AUTH] Sign-in timed out after 12s');
         this._showAuthError('Sign-in timed out. The server may be busy. Please try again.');
       }, 12000);
 
       try {
         const controller = new AbortController();
         const fetchTimeout = setTimeout(() => controller.abort(), 10000);
-        debugLog('POST /api/auth/google with idToken...');
 
         const res = await fetch(API + '/api/auth/google', {
           method:  'POST',
@@ -262,7 +259,6 @@
         clearTimeout(safetyTimeout);
 
         const data = await res.json();
-        debugLog('Backend data: ' + JSON.stringify({success: data.success, has_user: !!data.user}));
 
         if (data.success && data.user) {
           const user = data.user;
@@ -271,16 +267,14 @@
 
           this.currentUser = user;
           this._saveUser(user);
-          debugLog('Sign-in complete');
           this.closeLoginModal();
           this._updateUI();
         } else {
-          debugLog('Backend rejected: ' + (data.error || 'unknown'));
           this._showAuthError(data.error || 'Authentication failed');
         }
       } catch (err) {
         clearTimeout(safetyTimeout);
-        debugLog('Error: ' + (err.name + ': ' + err.message));
+        console.error('[AUTH] Error verifying token:', err);
         if (err.name === 'AbortError') {
           this._showAuthError('Sign-in timed out. Please check your connection and try again.');
         } else {
@@ -301,15 +295,13 @@
           text: 'continue_with', shape: 'rectangular',
           width: container.clientWidth || 280, logo_alignment: 'center',
         });
-        debugLog('renderButton done');
       } catch (e) {
-        debugLog('renderButton failed: ' + e.message);
+        console.error('[AUTH] renderButton failed:', e);
       }
     },
 
     // ─── Show auth error in modal ─────────────────────────
     _showAuthError(msg) {
-      debugLog('ERROR: ' + msg);
       const modalCard = document.querySelector('.auth-modal-card');
       if (modalCard) {
         modalCard.innerHTML = `
@@ -321,9 +313,8 @@
           </div>
           <button id="gsi-fallback-btn" onclick="OROPEZAS_AUTH._startGoogleSignIn()" style="display:flex;width:100%;padding:12px 16px;background:#fff;border:1px solid #dadce0;border-radius:4px;color:#3c4043;font-size:14px;font-weight:500;cursor:pointer;align-items:center;justify-content:center;gap:10px;margin:1rem 0;transition:box-shadow 0.2s,background 0.2s;" onmouseover="this.style.boxShadow='0 1px 2px rgba(60,64,67,0.3),0 1px 3px rgba(60,64,67,0.15)';this.style.background='#f8f9fa';" onmouseout="this.style.boxShadow='none';this.style.background='#fff';">
             <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.13-.84 2.08-1.78 2.72v2.26h2.88c1.69-1.56 2.66-3.86 2.66-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.88-2.26c-.81.54-1.84.86-3.08.86-2.37 0-4.38-1.6-5.1-3.74H.95v2.33C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.9 10.68c-.18-.54-.29-1.11-.29-1.68s.11-1.14.29-1.68V5H.95C.35 6.19 0 7.55 0 9s.35 2.81.95 4l2.95-2.32z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.95 4.95l2.95 2.33C4.62 5.14 6.63 3.58 9 3.58z"/></svg>
-            Try Again
+            Continue with Google
           </button>
-          <div id="gsi-button-container" style="display:none;"></div>
           <p class="auth-modal-terms">By signing in, you agree to our <a href="/terminos.html">Terms of Use</a> and <a href="/privacidad.html">Privacy Policy</a>.</p>
         `;
       }
@@ -370,7 +361,6 @@
       if (!loginBtn || !avatarBox) return;
 
       if (user) {
-        debugLog('UI: logged in as ' + (user.name || user.email));
         loginBtn.style.display = 'none';
         avatarBox.style.display = 'flex';
         if (picImg) {
@@ -386,7 +376,6 @@
           el.style.display = (user.role === 'admin') ? '' : 'none';
         });
       } else {
-        debugLog('UI: not logged in');
         loginBtn.style.display = 'flex';
         avatarBox.style.display = 'none';
         if (menu) menu.classList.remove('open');
@@ -398,7 +387,6 @@
 
     // ─── Login Modal ───────────────────────────────────────
     openLoginModal() {
-      debugLog('Opening login modal');
       let modal = document.getElementById('auth-modal');
 
       if (!modal) {
@@ -416,6 +404,7 @@
               <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.13-.84 2.08-1.78 2.72v2.26h2.88c1.69-1.56 2.66-3.86 2.66-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.88-2.26c-.81.54-1.84.86-3.08.86-2.37 0-4.38-1.6-5.1-3.74H.95v2.33C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.9 10.68c-.18-.54-.29-1.11-.29-1.68s.11-1.14.29-1.68V5H.95C.35 6.19 0 7.55 0 9s.35 2.81.95 4l2.95-2.32z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.95 4.95l2.95 2.33C4.62 5.14 6.63 3.58 9 3.58z"/></svg>
               Continue with Google
             </button>
+            <!-- Hidden container for renderButton fallback -->
             <div id="gsi-button-container" style="display:none;"></div>
             <p class="auth-modal-terms">By signing in, you agree to our <a href="/terminos.html">Terms of Use</a> and <a href="/privacidad.html">Privacy Policy</a>.</p>
           </div>
@@ -426,13 +415,31 @@
       modal.classList.add('open');
       document.body.style.overflow = 'hidden';
 
-      setTimeout(() => this._renderGSIButton(), 50);
-      setTimeout(() => {
-        const container = document.getElementById('gsi-button-container');
-        if (container && container.children.length === 1 && container.querySelector('p')) {
-          this._renderGSIButton();
+      // If TokenClient isn't available yet, try to set it up now
+      if (!this.tokenClient && window.google?.accounts?.oauth2) {
+        this._setupGSI();
+      }
+      // If Google GIS isn't loaded at all, show a helpful message
+      if (!window.google?.accounts) {
+        const btn = document.getElementById('gsi-fallback-btn');
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = 'Google Sign-In is loading... Please wait.';
         }
-      }, 2000);
+        // Retry after script loads
+        const check = setInterval(() => {
+          if (window.google?.accounts) {
+            clearInterval(check);
+            this._setupGSI();
+            const btn2 = document.getElementById('gsi-fallback-btn');
+            if (btn2) {
+              btn2.disabled = false;
+              btn2.innerHTML = `<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.13-.84 2.08-1.78 2.72v2.26h2.88c1.69-1.56 2.66-3.86 2.66-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.88-2.26c-.81.54-1.84.86-3.08.86-2.37 0-4.38-1.6-5.1-3.74H.95v2.33C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.9 10.68c-.18-.54-.29-1.11-.29-1.68s.11-1.14.29-1.68V5H.95C.35 6.19 0 7.55 0 9s.35 2.81.95 4l2.95-2.32z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.95 4.95l2.95 2.33C4.62 5.14 6.63 3.58 9 3.58z"/></svg> Continue with Google`;
+            }
+          }
+        }, 200);
+        setTimeout(() => clearInterval(check), 5000);
+      }
     },
 
     // ─── Close Modal ──────────────────────────────────────
@@ -452,7 +459,6 @@
 
     // ─── Logout ─────────────────────────────────────────────
     logout() {
-      debugLog('Logging out');
       this.currentUser = null;
       this.tokenClient = null;
       try {
