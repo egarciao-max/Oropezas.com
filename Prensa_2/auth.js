@@ -10,20 +10,9 @@
   const GOOGLE_CLIENT_ID = '233406003665-phh7pcmg6gr23fdlsfjb5db90avi9vrb.apps.googleusercontent.com';
   const LS_USER_KEY = 'oropezas_user_v3';
 
-  // ─── VISIBLE DEBUG OVERLAY ─────────────────────────────
+  // Debug overlay - commented out for production
   function debugLog(msg) {
     console.log('[AUTH]', msg);
-    var el = document.getElementById('auth-debug-overlay');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'auth-debug-overlay';
-      el.style.cssText = 'position:fixed;bottom:70px;right:10px;width:320px;max-height:250px;overflow-y:auto;background:rgba(0,0,0,0.92);color:#0f0;font-family:monospace;font-size:11px;padding:8px;border-radius:4px;z-index:99999;border:1px solid #0f0;box-shadow:0 0 10px rgba(0,255,0,0.3);';
-      document.body.appendChild(el);
-    }
-    var line = document.createElement('div');
-    line.textContent = new Date().toLocaleTimeString() + ' > ' + msg;
-    el.appendChild(line);
-    el.scrollTop = el.scrollHeight;
   }
 
   const OROPEZAS_AUTH = window.OROPEZAS_AUTH = {
