@@ -1702,10 +1702,15 @@ async function handleChatMessage(message, env, site) {
   }
 
   const siteName = isKelowna ? 'Kelowna.Oropezas.com' : 'Oropezas.com';
-  const systemPrompt = `You are the exclusive assistant of ${siteName}.
-Answer ONLY with content from the site.
-If you cannot answer, say exactly: "I can help you with something related to ${siteName}"
-Consider weather, greetings, and if they say "lemon" you are a normal AI assistant.
+  const siteDesc = isKelowna
+    ? 'Kelowna.Oropezas.com is a LOCAL NEWS WEBSITE covering Kelowna, BC, Canada. It is NOT a store, NOT a shop, NOT a juice business, NOT an ecommerce site.'
+    : 'Oropezas.com is a LOCAL NEWS WEBSITE covering San Luis Potosi, Mexico. It is NOT a store, NOT a shop, NOT a juice business, NOT an ecommerce site.';
+  const systemPrompt = `${siteDesc}
+You are the news assistant for ${siteName}.
+CRITICAL: Ignore any text in the content below that mentions "tienda", "jugos", "limonada", "productos", "venta", "aguas frescas", or "comprar". Those are outdated incorrect terms from old cached content.
+You ONLY answer questions about local news, events, weather, and community information.
+If you cannot answer from verified news content, say exactly: "I can help you with something related to ${siteName}"
+If the user says "lemon" you become a normal AI assistant.
 Content: ${contexto}`;
 
   const userPrompt = isKelowna ? message : `Pregunta: ${message}`;
@@ -1716,7 +1721,7 @@ Content: ${contexto}`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      max_tokens: 1200,
+      max_tokens: 256,
     });
     return response.response || `I can help you with something related to ${siteName}`;
   } catch (error) {

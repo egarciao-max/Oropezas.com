@@ -87,38 +87,23 @@ function renderGrid(articles) {
   });
 }
 
-// Load articles: try API first, fallback to embedded
-document.addEventListener('DOMContentLoaded', function() {
-  var page = document.body.dataset.page || 'index';
-  
-  // Try API first
-  var controller = new AbortController();
-  setTimeout(function() { controller.abort(); }, 5000);
-  fetch('https://oropezas.enriquegarciaoropeza.workers.dev/api/articles?site=kelowna', {
-    signal: controller.signal
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    var articles = data.articles || [];
-    if (articles.length === 0) throw new Error('No articles from API');
-    if (page === 'index') {
-      renderFeatured(articles[0]);
-      renderGrid(articles.slice(1, 7));
-    } else {
-      renderGrid(articles);
-    }
-  })
-  .catch(function(err) {
-    console.log('API failed, using embedded articles:', err);
-    // Fallback to embedded articles
+// Load articles: show embedded immediately (no API dependency)
+(function() {
+  function init() {
+    var page = document.body.dataset.page || 'index';
     if (page === 'index') {
       renderFeatured(KELOWNA_ARTICLES[0]);
       renderGrid(KELOWNA_ARTICLES.slice(1, 7));
     } else {
       renderGrid(KELOWNA_ARTICLES);
     }
-  });
-});
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 
 // Store articles globally for article.html
 window.KELOWNA_ARTICLES = KELOWNA_ARTICLES;

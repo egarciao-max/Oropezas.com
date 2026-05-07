@@ -37,7 +37,7 @@ function renderFeatured(article) {
             ' onerror="this.parentElement.style.display=\'none\'"' +
             ' style="width:100%;height:100%;object-fit:cover;border-radius:2px;">' +
           '</a></div>'
-        : '';
+        : '<div class="featured-image" style="background:linear-gradient(135deg,#c41e3a 0%,#8b0000 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-align:center;padding:2rem;">' + escapeHtml(article.category || 'Noticias') + '</div>';
 
     container.innerHTML =
         '<article class="featured-article">' +
@@ -112,7 +112,11 @@ function showLoadError() {
     if (grid) grid.innerHTML = msg;
 }
 
-document.addEventListener('DOMContentLoaded', loadArticles);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadArticles);
+} else {
+    loadArticles();
+}
 
 // ─── EMBEDDED FALLBACK ARTICLES (works offline) ───
 const EMBEDDED_ARTICLES = [
