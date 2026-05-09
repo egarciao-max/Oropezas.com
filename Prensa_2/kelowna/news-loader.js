@@ -72,13 +72,13 @@ function renderGrid(articles) {
         var imgUrl = getImageUrl(article);
         var imgHtml;
         if (imgUrl) {
-            imgHtml = '<a href="' + getArticleUrl(article) + '" style="display:block;width:100%;height:100%;">' +
+            imgHtml = '<a href="' + getArticleUrl(article) + '" style="display:block;width:100%;height:180px;">' +
                 '<img src="' + imgUrl + '" alt="' + escapeHtml(article.title) + '"' +
-                ' onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<div style=width:100%;height:100%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;>' + escapeHtml(article.category || 'Noticias') + '</div>\';"' +
-                ' style="width:100%;height:100%;object-fit:cover;display:block;">' +
+                ' onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<div style=width:100%;height:180px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;>' + escapeHtml(article.category || 'Noticias') + '</div>\';"' +
+                ' style="width:100%;height:180px;object-fit:cover;display:block;">' +
               '</a>';
         } else {
-            imgHtml = '<div style="width:100%;height:100%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;">' + escapeHtml(article.category || 'Noticias') + '</div>';
+            imgHtml = '<div style="width:100%;height:180px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;">' + escapeHtml(article.category || 'Noticias') + '</div>';
         }
         return '<article class="news-card" style="animation-delay:' + (0.1 * index) + 's">' +
             '<div class="news-card-image">' + imgHtml + '</div>' +
