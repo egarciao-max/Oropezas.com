@@ -6,9 +6,8 @@ function getArticleUrl(article) {
 }
 
 function getImageUrl(article) {
-    if (article.featuredImage && article.featuredImage !== '/LOGO.jpeg') return article.featuredImage;
-    if (article.image && article.image !== '/LOGO.jpeg') return article.image;
-    if (article.slug) return `${API_BASE}/api/media/articles/noticias/${article.slug}.jpg`;
+    if (article.featuredImage && article.featuredImage !== '/LOGO.jpeg' && article.featuredImage !== '') return article.featuredImage;
+    if (article.image && article.image !== '/LOGO.jpeg' && article.image !== '') return article.image;
     return '';
 }
 
@@ -31,13 +30,16 @@ function renderFeatured(article) {
     if (!container || !article) return;
 
     var imgUrl = getImageUrl(article);
-    var imgHtml = imgUrl
-        ? '<div class="featured-image"><a href="' + getArticleUrl(article) + '">' +
+    var imgHtml;
+    if (imgUrl) {
+        imgHtml = '<div class="featured-image" style="position:relative;overflow:hidden;"><a href="' + getArticleUrl(article) + '">' +
             '<img src="' + imgUrl + '" alt="' + escapeHtml(article.title) + '"' +
-            ' onerror="this.parentElement.style.display=\'none\'"' +
-            ' style="width:100%;height:100%;object-fit:cover;border-radius:2px;">' +
-          '</a></div>'
-        : '<div class="featured-image" style="background:linear-gradient(135deg,#c41e3a 0%,#8b0000 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-align:center;padding:2rem;">' + escapeHtml(article.category || 'Noticias') + '</div>';
+            ' onerror="this.style.display=\'none\';this.parentElement.parentElement.style.background=\'linear-gradient(135deg,#c41e3a 0%,#8b0000 100%)\';this.parentElement.parentElement.innerHTML=\'<div style=display:flex;align-items:center;justify-content:center;height:100%;color:#fff;font-size:1.2rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-align:center;padding:2rem;>' + escapeHtml(article.category || 'Noticias') + '</div>\';"' +
+            ' style="width:100%;height:100%;object-fit:cover;border-radius:2px;display:block;">' +
+          '</a></div>';
+    } else {
+        imgHtml = '<div class="featured-image" style="background:linear-gradient(135deg,#c41e3a 0%,#8b0000 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-align:center;padding:2rem;">' + escapeHtml(article.category || 'Noticias') + '</div>';
+    }
 
     container.innerHTML =
         '<article class="featured-article">' +
@@ -68,13 +70,16 @@ function renderGrid(articles) {
 
     container.innerHTML = articles.map(function(article, index) {
         var imgUrl = getImageUrl(article);
-        var imgHtml = imgUrl
-            ? '<a href="' + getArticleUrl(article) + '">' +
+        var imgHtml;
+        if (imgUrl) {
+            imgHtml = '<a href="' + getArticleUrl(article) + '" style="display:block;width:100%;height:100%;">' +
                 '<img src="' + imgUrl + '" alt="' + escapeHtml(article.title) + '"' +
-                ' onerror="this.parentElement.style.display=\'none\'"' +
-                ' style="width:100%;height:100%;object-fit:cover;">' +
-              '</a>'
-            : '<div style="width:100%;height:100%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;">' + escapeHtml(article.category || 'Noticias') + '</div>';
+                ' onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<div style=width:100%;height:100%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;>' + escapeHtml(article.category || 'Noticias') + '</div>\';"' +
+                ' style="width:100%;height:100%;object-fit:cover;display:block;">' +
+              '</a>';
+        } else {
+            imgHtml = '<div style="width:100%;height:100%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;">' + escapeHtml(article.category || 'Noticias') + '</div>';
+        }
         return '<article class="news-card" style="animation-delay:' + (0.1 * index) + 's">' +
             '<div class="news-card-image">' + imgHtml + '</div>' +
             '<h3>' + escapeHtml(article.title) + '</h3>' +
