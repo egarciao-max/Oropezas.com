@@ -49,5 +49,19 @@
   ],
   "ai": {
     "binding": "AI"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "oropezas-db",
+      "database_id": "00000000-0000-0000-0000-000000000000"
+    }
+  ],
+  "env": {
+    "production": {
+      "vars": {
+        "FIREBASE_API_KEY": "AIzaSyCy7ZzxAc830KyA7TejjE5X5coPDCsokqw"
+      }
+    }
   }
 }

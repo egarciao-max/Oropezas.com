@@ -246,6 +246,153 @@ async function seedKelownaArticles(env) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// D1 DATABASE — Articles only (users are in Firestore)
+// ═══════════════════════════════════════════════════════════════
+async function d1Init(env) {
+  if (!env.DB) return;
+  try {
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS articles (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, excerpt TEXT, html TEXT, category TEXT DEFAULT 'noticias', date TEXT, author TEXT DEFAULT 'Redaccion Oropezas', site TEXT DEFAULT 'main', status TEXT DEFAULT 'published', featured_image TEXT, image TEXT, tags TEXT, featured INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
+  } catch (e) { console.error('[D1] Init error:', e); }
+}
+
+async function d1Query(env, sql, params = []) {
+  if (!env.DB) return { results: [] };
+  try { return await env.DB.prepare(sql).bind(...params).all(); }
+  catch (e) { console.error('[D1] Query error:', e); return { results: [] }; }
+}
+
+async function d1GetArticles(env, site, limit = 50) {
+  const { results } = await d1Query(env,
+    'SELECT id, title, slug, excerpt, html, category, date, author, site, status, featured_image, image, tags, featured, created_at FROM articles WHERE site = ? AND status = "published" ORDER BY date DESC, id DESC LIMIT ?',
+    [site, limit]);
+  return results || [];
+}
+
+async function d1GetArticleBySlug(env, slug) {
+  const { results } = await d1Query(env,
+    'SELECT id, title, slug, excerpt, html, category, date, author, site, status, featured_image, image, tags, featured, created_at FROM articles WHERE slug = ? LIMIT 1',
+    [slug]);
+  return results && results[0] ? results[0] : null;
+}
+
+async function d1SaveArticle(env, a) {
+  if (!env.DB) return null;
+  const existing = await d1GetArticleBySlug(env, a.slug);
+  if (existing) {
+    await env.DB.prepare('UPDATE articles SET title=?, excerpt=?, html=?, category=?, date=?, author=?, site=?, status=?, featured_image=?, image=?, tags=?, updated_at=CURRENT_TIMESTAMP WHERE slug=?')
+      .bind(a.title, a.excerpt||'', a.html||'', a.category||'noticias', a.date||'2026-05-05', a.author||'Redaccion Oropezas', a.site||'main', a.status||'published', a.featuredImage||a.image||'', a.image||'', JSON.stringify(a.tags||[]), a.slug).run();
+  } else {
+    await env.DB.prepare('INSERT OR IGNORE INTO articles (title,slug,excerpt,html,category,date,author,site,status,featured_image,image,tags,featured) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+      .bind(a.title, a.slug, a.excerpt||'', a.html||'', a.category||'noticias', a.date||'2026-05-05', a.author||'Redaccion Oropezas', a.site||'main', a.status||'published', a.featuredImage||a.image||'', a.image||'', JSON.stringify(a.tags||[]), a.featured?1:0).run();
+  }
+  return a;
+}
+
+async function d1SeedIfEmpty(env, articles, site) {
+  const { results } = await d1Query(env, 'SELECT COUNT(*) as c FROM articles WHERE site = ?', [site]);
+  if (results && results[0] && results[0].c > 0) return;
+  for (const a of articles) await d1SaveArticle(env, a);
+  console.log('[D1] Seeded ' + articles.length + ' ' + site + ' articles');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FIRESTORE REST API — Users (Firestore for user data)
+// ═══════════════════════════════════════════════════════════════
+const FIREBASE_PROJECT_ID = 'oropezascom';
+const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
+
+async function fsGetUser(uid, env) {
+  try {
+    const res = await fetch(`${FIRESTORE_BASE}/users/${uid}`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Firestore error ${res.status}`);
+    const doc = await res.json();
+    return fsDocToUser(doc);
+  } catch (e) { console.error('[FS] Get user error:', e); return null; }
+}
+
+async function fsSaveUser(u, env) {
+  try {
+    const existing = await fsGetUser(u.uid, env);
+    const now = new Date().toISOString();
+    const fields = {
+      uid:        { stringValue: u.uid },
+      email:      { stringValue: u.email || '' },
+      name:       { stringValue: u.name || '' },
+      picture:    { stringValue: u.picture || '' },
+      role:       { stringValue: u.role || 'user' },
+      title:      { stringValue: u.title || '' },
+      bio:        { stringValue: u.bio || '' },
+      lastLogin:  { timestampValue: now },
+      ...(existing ? {} : { joinedAt: { timestampValue: now } })
+    };
+    await fetch(`${FIRESTORE_BASE}/users/${u.uid}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields })
+    });
+  } catch (e) { console.error('[FS] Save user error:', e); }
+}
+
+function fsDocToUser(doc) {
+  if (!doc || !doc.fields) return null;
+  const f = doc.fields;
+  const getStr = (field) => f[field]?.stringValue || '';
+  const getTime = (field) => f[field]?.timestampValue || '';
+  return {
+    uid:       getStr('uid'),
+    email:     getStr('email'),
+    name:      getStr('name'),
+    picture:   getStr('picture'),
+    role:      getStr('role') || 'user',
+    title:     getStr('title'),
+    bio:       getStr('bio'),
+    joinedAt:  getTime('joinedAt'),
+    lastLogin: getTime('lastLogin'),
+  };
+}
+
+// ─── Verify Firebase ID Token via REST API ──────────────────
+async function verifyFirebaseToken(idToken, env) {
+  try {
+    // Firebase Auth REST: verify the ID token by getting account info
+    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${env.FIREBASE_API_KEY || ''}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.users || data.users.length === 0) return null;
+    const user = data.users[0];
+    return {
+      sub:     user.localId,
+      email:   user.email,
+      name:    user.displayName || user.email.split('@')[0],
+      picture: user.photoUrl || '',
+    };
+  } catch (e) { console.error('[AUTH] Firebase verify error:', e); return null; }
+}
+
+// ─── Unified token verification (Google JWT or Firebase) ────
+async function verifyAnyToken(token) {
+  // Try Firebase verification first (for Firebase ID tokens)
+  if (token.length > 500) {
+    // Likely a Firebase token — they tend to be longer
+    // We can't reliably distinguish without the API key at this layer,
+    // so we decode both and let the auth handler try Firebase first
+  }
+  // Decode Google ID token (basic — no signature verification in Worker)
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (payload.exp * 1000 < Date.now()) return null;
+    return payload;
+  } catch (e) { return null; }
+}
+
 // ─── MAIN SITE SEED ARTICLES ──────────────────────────────
 const MAIN_SEED_ARTICLES = [
   {
@@ -328,13 +475,15 @@ async function handleCreateThread(request, env, corsHeaders) {
   const body = await request.json();
   const { title, body: text, category, authorId, authorName, authorEmail, authorPicture, token } = body;
 
-  // Validar sesión
+  // Validar sesión (supports Google ID token or Firebase token)
   if (!token) {
     return new Response(JSON.stringify({ success: false, error: 'No autenticado' }), {
       status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-  const payload = decodeGoogleToken(token);
+  let payload = null;
+  if (env.FIREBASE_API_KEY) payload = await verifyFirebaseToken(token, env);
+  if (!payload) payload = decodeGoogleToken(token);
   if (!payload || payload.email !== authorEmail) {
     return new Response(JSON.stringify({ success: false, error: 'Token inválido' }), {
       status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -421,13 +570,15 @@ async function handleCreateReply(threadId, request, env, corsHeaders) {
   const body = await request.json();
   const { body: text, authorId, authorName, authorEmail, authorPicture, token } = body;
 
-  // Validar sesión
+  // Validar sesión (supports Google ID token or Firebase token)
   if (!token) {
     return new Response(JSON.stringify({ success: false, error: 'No autenticado' }), {
       status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-  const payload = decodeGoogleToken(token);
+  let payload = null;
+  if (env.FIREBASE_API_KEY) payload = await verifyFirebaseToken(token, env);
+  if (!payload) payload = decodeGoogleToken(token);
   if (!payload || payload.email !== authorEmail) {
     return new Response(JSON.stringify({ success: false, error: 'Token inválido' }), {
       status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -738,9 +889,12 @@ async function resolverImagenArticulo(article, env, { slug, category }) {
 
 export default {
   async fetch(request, env, ctx) {
-    // Seed Kelowna articles in background (don't block requests)
-    ctx.waitUntil(seedKelownaArticles(env).catch(() => {}));
-    ctx.waitUntil(seedMainArticles(env).catch(() => {}));
+    // Initialize D1 tables on first request
+    ctx.waitUntil(d1Init(env).catch(() => {}));
+
+    // Seed articles in background
+    ctx.waitUntil(seedKelownaArticlesD1(env).catch(() => {}));
+    ctx.waitUntil(seedMainArticlesD1(env).catch(() => {}));
 
     const url = new URL(request.url);
     const origin = request.headers.get('Origin');
@@ -827,77 +981,79 @@ export default {
     const forosRes = await handleForosRoutes(url.pathname, request, env, corsHeaders);
     if (forosRes) return forosRes;
 
-    // ============================================================
-    // AUTH GOOGLE
-    // ============================================================
+    // ═══════════════════════════════════════════════════════════════
+    // AUTH — Google OAuth + Firebase Auth (Firestore for users)
+    // ═══════════════════════════════════════════════════════════════
     if (url.pathname === '/api/auth/google' && request.method === 'POST') {
       try {
         const body = await request.json();
         let payload = null;
+        let uid = null;
 
-        // ─── Method 1: ID Token (JWT from GIS renderButton/prompt) ───
-        if (body.idToken) {
-          payload = decodeGoogleToken(body.idToken);
+        // ─── Method 1: Firebase ID Token (preferred) ───
+        if (body.firebaseToken && env.FIREBASE_API_KEY) {
+          payload = await verifyFirebaseToken(body.firebaseToken, env);
+          if (payload) uid = payload.sub;
         }
-        // ─── Method 2: Access Token (from GIS TokenClient popup) ───
-        else if (body.accessToken) {
+        // ─── Method 2: Google ID Token (JWT from GIS) ───
+        if (!payload && body.idToken) {
+          payload = decodeGoogleToken(body.idToken);
+          if (payload) uid = payload.sub;
+        }
+        // ─── Method 3: Access Token (from GIS TokenClient) ───
+        if (!payload && body.accessToken) {
           try {
             const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo?access_token=' + encodeURIComponent(body.accessToken));
             if (userRes.ok) {
               const userData = await userRes.json();
-              payload = {
-                sub:   userData.sub,
-                email: userData.email,
-                name:  userData.name,
-                picture: userData.picture,
-              };
+              payload = { sub: userData.sub, email: userData.email, name: userData.name, picture: userData.picture };
+              uid = userData.sub;
             }
           } catch (e) { console.error('[AUTH] Userinfo fetch failed:', e); }
         }
 
-        if (!payload || !payload.sub) {
+        if (!payload || !uid) {
           return new Response(JSON.stringify({ success: false, error: 'Token inválido o expirado' }), {
             status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
 
-        const uid = payload.sub;
-        // Load or create user profile from KV
-        let userProfile = null;
-        const rawProfile = await env.OROPEZAS_KV.get(`user:${uid}`);
-        if (rawProfile) {
-          userProfile = JSON.parse(rawProfile);
-          // Refresh name/picture from Google token
+        // Load from Firestore first, fallback to KV
+        let userProfile = await fsGetUser(uid, env);
+
+        if (userProfile) {
+          // Refresh from token
           userProfile.name    = payload.name    || userProfile.name;
           userProfile.picture = payload.picture || userProfile.picture;
           userProfile.lastLogin = new Date().toISOString();
         } else {
-          // New user — create with default role 'user'
-          userProfile = {
-            uid,
-            email:     payload.email   || '',
-            name:      payload.name    || '',
-            picture:   payload.picture || '',
-            role:      'user',
-            title:     '',
-            bio:       '',
-            joinedAt:  new Date().toISOString(),
-            lastLogin: new Date().toISOString(),
-          };
+          // Check KV (migration path: existing users in KV)
+          const rawProfile = await env.OROPEZAS_KV.get(`user:${uid}`);
+          if (rawProfile) {
+            userProfile = JSON.parse(rawProfile);
+            userProfile.uid = uid;
+            userProfile.name    = payload.name    || userProfile.name;
+            userProfile.picture = payload.picture || userProfile.picture;
+            userProfile.lastLogin = new Date().toISOString();
+          } else {
+            // New user
+            userProfile = {
+              uid, email: payload.email || '', name: payload.name || '',
+              picture: payload.picture || '', role: 'user', title: '', bio: '',
+              joinedAt: new Date().toISOString(), lastLogin: new Date().toISOString(),
+            };
+          }
         }
-        // Save updated profile
-        await env.OROPEZAS_KV.put(`user:${uid}`, JSON.stringify(userProfile));
+
+        // Save to Firestore (async, don't block response)
+        ctx.waitUntil(fsSaveUser(userProfile, env).catch(() => {}));
+        // Also save to KV for redundancy
+        ctx.waitUntil(env.OROPEZAS_KV.put(`user:${uid}`, JSON.stringify(userProfile)).catch(() => {}));
+
         return new Response(JSON.stringify({
           success: true,
-          user: {
-            uid:     userProfile.uid,
-            email:   userProfile.email,
-            name:    userProfile.name,
-            picture: userProfile.picture,
-            role:    userProfile.role,
-            title:   userProfile.title  || '',
-            bio:     userProfile.bio    || '',
-          }
+          user: { uid: userProfile.uid, email: userProfile.email, name: userProfile.name,
+            picture: userProfile.picture, role: userProfile.role, title: userProfile.title || '', bio: userProfile.bio || '' }
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch (e) {
         return new Response(JSON.stringify({ success: false, error: 'Error procesando token' }), {
@@ -1426,53 +1582,48 @@ async function handleAgentDashboard(request, env, corsHeaders) {
 
 async function handleGetArticles(request, env, corsHeaders) {
   try {
-    const indexRaw = await env.OROPEZAS_KV.get('articles_index');
-    if (!indexRaw) {
-      return new Response(JSON.stringify({
-        lastUpdated: new Date().toISOString(),
-        articles: []
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
-    const data = JSON.parse(indexRaw);
-    let articles = data.articles || [];
-
     const url = new URL(request.url);
+    const site = url.searchParams.get('site');
     const slug = url.searchParams.get('slug');
     const category = url.searchParams.get('category');
     const featured = url.searchParams.get('featured');
-    const site = url.searchParams.get('site');
 
-    // Filter by site - Kelowna reads from its own index
-    if (site === 'kelowna') {
-      try {
-        const kelownaData = await env.OROPEZAS_KV.get('kelowna_articles_index');
-        if (kelownaData) {
-          const parsed = JSON.parse(kelownaData);
-          articles = parsed.articles || [];
-        } else {
-          articles = [];
-        }
-      } catch {
-        articles = [];
+    // Try D1 first
+    if (env.DB) {
+      const siteFilter = site || 'main';
+      let sql = 'SELECT id, title, slug, excerpt, category, date, author, site, status, image, featured_image as featuredImage, featured, tags, created_at FROM articles WHERE site = ? AND status = "published"';
+      const params = [siteFilter];
+      if (category) { sql += ' AND category = ?'; params.push(category); }
+      if (slug) { sql += ' AND slug = ?'; params.push(slug); }
+      if (featured === 'true') { sql += ' AND featured = 1'; }
+      sql += ' ORDER BY date DESC, id DESC LIMIT 50';
+
+      const { results } = await env.DB.prepare(sql).bind(...params).all();
+      if (results && results.length > 0) {
+        return new Response(JSON.stringify({
+          articles: results.map(r => ({
+            id: r.id, title: r.title, slug: r.slug, excerpt: r.excerpt,
+            category: r.category, date: r.date, author: r.author, site: r.site,
+            status: r.status, image: r.image, featuredImage: r.featuredImage,
+            featured: r.featured, tags: r.tags, created_at: r.created_at
+          }))
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
     }
 
-    if (slug) {
-      articles = articles.filter((a) => {
-        if (a.slug === slug) return true;
-        return typeof a.url === 'string' && a.url.includes(`slug=${slug}`);
-      });
+    // Fallback to KV
+    const siteFilter = site || 'main';
+    let articles = [];
+    if (siteFilter === 'kelowna') {
+      const indexRaw = await env.OROPEZAS_KV.get('kelowna_articles_index');
+      if (indexRaw) articles = JSON.parse(indexRaw).articles || [];
+    } else {
+      const indexRaw = await env.OROPEZAS_KV.get('articles_index');
+      if (indexRaw) articles = JSON.parse(indexRaw).articles || [];
     }
-    if (category) articles = articles.filter(a => a.category === category);
-    if (featured === 'true') articles = articles.filter(a => a.featured);
-
-    return new Response(JSON.stringify({
-      lastUpdated: data.lastUpdated,
-      total: articles.length,
-      articles
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
+    return new Response(JSON.stringify({ articles }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   } catch (error) {
     return new Response(JSON.stringify({ success: false, error: error.message }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -2516,13 +2667,17 @@ async function handleGetUserProfile(request, env, corsHeaders) {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
-    const raw = await env.OROPEZAS_KV.get(`user:${uid}`);
-    if (!raw) {
-      return new Response(JSON.stringify({ error: 'Usuario no encontrado' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+    // Firestore first, fallback to KV
+    let user = await fsGetUser(uid, env);
+    if (!user) {
+      const raw = await env.OROPEZAS_KV.get(`user:${uid}`);
+      if (!raw) {
+        return new Response(JSON.stringify({ error: 'Usuario no encontrado' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      user = JSON.parse(raw);
     }
-    const user = JSON.parse(raw);
     const isVerified = user.verified || user.role === 'ceo' || user.role === 'publisher' || user.role === 'ai';
     const verifiedLabel = user.verifiedLabel || (
       user.role === 'ceo' ? 'Fundador' :
@@ -2557,17 +2712,28 @@ async function handleUpdateUserProfile(request, env, corsHeaders) {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
-    const payload = decodeGoogleToken(token);
+    // Support both Firebase tokens and Google ID tokens
+    let payload = null;
+    if (env.FIREBASE_API_KEY) {
+      payload = await verifyFirebaseToken(token, env);
+    }
+    if (!payload) payload = decodeGoogleToken(token);
     if (!payload || payload.sub !== uid) {
       return new Response(JSON.stringify({ success: false, error: 'Token invalido' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
-    const raw = await env.OROPEZAS_KV.get(`user:${uid}`);
-    const user = raw ? JSON.parse(raw) : { uid, role: 'user' };
+    // Load from Firestore first
+    let user = await fsGetUser(uid, env);
+    if (!user) {
+      const raw = await env.OROPEZAS_KV.get(`user:${uid}`);
+      user = raw ? JSON.parse(raw) : { uid, role: 'user' };
+    }
     if (title       !== undefined) user.title       = String(title).substring(0, 100);
     if (bio         !== undefined) user.bio         = String(bio).substring(0, 500);
     if (displayName !== undefined) user.displayName = String(displayName).substring(0, 80);
+    // Save to both Firestore and KV
+    await fsSaveUser(user, env);
     await env.OROPEZAS_KV.put(`user:${uid}`, JSON.stringify(user));
     return new Response(JSON.stringify({ success: true, user }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
